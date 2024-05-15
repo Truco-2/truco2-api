@@ -25,7 +25,30 @@ services:
             - appnet
         depends_on:
             - app
-    
+
+    postgres:
+        build:
+            context: ./psql
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: truco123
+        networks:
+            - appnet
+        ports:
+            - "5432:5432"
+
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: truco2.user@ufam.com.br
+            PGADMIN_DEFAULT_PASSWORD: truco123
+        ports:
+            - "16543:80"
+        depends_on:
+            - postgres
+        networks:
+            - appnet
+
 networks:
     appnet:
         driver: bridge
