@@ -18,6 +18,6 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: 22
         script: |
-          cd ~/home/dev/truco2-api/
+          cd /home/dev/truco2-api/
           git pull origin main
           docker compose up -d --build
