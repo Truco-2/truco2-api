@@ -19,7 +19,7 @@ export class AppController {
     ) {}
 
     @Get('/')
-    async getHelloWorld(): Promise<string> {
+    async getHello(): Promise<string> {
         const user = (await this.userService.users({}))[0];
 
         return `Hello from Truco 2! First user in DB is ${user.name}`;
