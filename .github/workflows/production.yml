@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: E2E Tests
-        run: docker compose -f docker-compose.e2e.yml up --abort-on-container-exit --exit-code-from app
+        run: docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from app
   deploy:
     runs-on: ubuntu-latest
     steps:
