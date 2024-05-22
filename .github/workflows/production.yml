@@ -1,5 +1,5 @@
 #CD GitHub Actions Workflow
-name: CD
+name: production
 
 on:
   push:
