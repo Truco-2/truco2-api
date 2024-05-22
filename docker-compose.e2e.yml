@@ -1,0 +1,33 @@
+services:
+    # image project
+    app:
+        build:
+            context: ./app
+        command: sh -c "npm install && npm run test:e2e"
+        restart: unless-stopped
+        container_name: truco2-api-app
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./app:/app/
+        networks:
+            - appnet
+        depends_on:
+            - postgres
+
+    postgres:
+        image: postgres:15
+        restart: unless-stopped
+        container_name: truco2-api-postgres
+        environment:
+            POSTGRES_PASSWORD: truco123
+        volumes:
+            - ./psql:/var/lib/postgresql/data
+        networks:
+            - appnet
+        ports:
+            - "5432:5432"
+
+networks:
+    appnet:
+        driver: bridge
