@@ -3,7 +3,7 @@ services:
     app:
         build:
             context: ./app
-        command: sh -c "npm install && npm run test:e2e"
+        command: sh -c "npm install && cp .env.example .env && npm run test:e2e"
         restart: unless-stopped
         container_name: truco2-api-app
         ports:
