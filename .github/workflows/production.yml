@@ -36,4 +36,4 @@ jobs:
           script: |
             cd /home/dev/truco2-api/
             git pull origin main
-            docker compose up -d --build
+            docker compose -f docker-compose.production.yml up -d --build

@@ -5,7 +5,7 @@ services:
             context: ./app
         command: sh -c "npm ci && npm run build && npm run start:prod_db"
         restart: unless-stopped
-        container_name: truco2-api-app-staging
+        container_name: truco2-api-app
         volumes:
             - ./app:/app/
         networks:
@@ -15,11 +15,11 @@ services:
     
     nginx:
         restart: unless-stopped
-        container_name: truco2-api-nginx-staging
+        container_name: truco2-api-nginx
         build:
             context: ./nginx
         ports:
-            - "8216:80"
+            - "8016:80"
         networks:
             - appnet
         depends_on:
@@ -28,7 +28,7 @@ services:
     postgres:
         image: postgres:15
         restart: unless-stopped
-        container_name: truco2-api-postgres-staging
+        container_name: truco2-api-postgres
         environment:
             POSTGRES_PASSWORD: truco123
         volumes:
@@ -36,17 +36,17 @@ services:
         networks:
             - appnet
         ports:
-            - "5632:5432"
+            - "5432:5432"
 
     pgadmin:
         image: dpage/pgadmin4
         restart: unless-stopped
-        container_name: truco2-api-pgadmin-staging
+        container_name: truco2-api-pgadmin
         environment:
             PGADMIN_DEFAULT_EMAIL: truco2.user@ufam.com.br
             PGADMIN_DEFAULT_PASSWORD: truco123
         ports:
-            - "16743:80"
+            - "16543:80"
         volumes:
             - ./pgadmin:/var/lib/pgadmin
         depends_on:
