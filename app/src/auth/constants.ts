@@ -1,3 +1,5 @@
+import { env } from "process";
+
 export const jwtConstants = {
-    secret: '?U=K.^rI8v9#Q6GY81>',
+    secret: env.JWT_SECRET,
 };
