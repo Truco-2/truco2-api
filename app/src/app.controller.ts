@@ -18,7 +18,6 @@ export class AppController {
         return this.authService.login(req.user);
     }
 
-    //@UseGuards(JwtAuthGuard)
     @Get('guest')
     async guest() {
         const user = await this.userService.generateGuestUser();
