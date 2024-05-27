@@ -8,8 +8,41 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String? @unique
-  name     String  @unique
-  password String?
+  id         Int          @id @default(autoincrement())
+  email      String?      @unique
+  name       String       @unique
+  password   String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  ownedRooms Room[]       @relation("owned_rooms")
+  UsersRooms UsersRooms[]
+
+  @@map("users")
+}
+
+model Room {
+  id         Int          @id @default(autoincrement())
+  name       String
+  code       String       @unique
+  ownerId    Int          @map("owner_id")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  isPrivate  Boolean      @default(false) @map("is_private")
+  maxPlayers Int          @default(2) @map("max_players")
+  password   String?
+  owner      User         @relation("owned_rooms", fields: [ownerId], references: [id])
+  UsersRooms UsersRooms[]
+
+  @@map("rooms")
+}
+
+model UsersRooms {
+  userId     Int      @map("user_id")
+  roomId     Int      @map("room_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+  Room       Room     @relation(fields: [roomId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@id([userId, roomId])
+  @@map("users_rooms")
 }
