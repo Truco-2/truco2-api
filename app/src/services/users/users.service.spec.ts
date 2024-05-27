@@ -8,6 +8,7 @@ describe('UsersService', () => {
     const mockPrismaService = {
         user: {
             findFirst: jest.fn(),
+            create: jest.fn(),
         },
     };
 
@@ -37,6 +38,20 @@ describe('UsersService', () => {
 
         // Act
         const response = await service.userByName('user');
+
+        // Assert
+        expect(response.name).toBe('user');
+    });
+
+    it('Generate guest user ok', async () => {
+        // Arrange
+        mockPrismaService.user.create.mockReturnValue({
+            id: 1,
+            name: 'user',
+        });
+
+        // Act
+        const response = await service.generateGuestUser();
 
         // Assert
         expect(response.name).toBe('user');
