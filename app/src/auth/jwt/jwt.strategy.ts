@@ -1,6 +1,6 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { jwtConstants } from '../constants';
 import { Socket } from 'socket.io';
 
@@ -10,7 +10,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([
                 (socketClient: Socket) => {
-                    return socketClient.handshake.headers.authorization ?? null;
+                    if (socketClient.handshake) {
+                        const token =
+                            socketClient.handshake.headers.authorization ??
+                            null;
+
+                        if (!token) {
+                            throw new UnauthorizedException();
+                        } else {
+                            return token;
+                        }
+                    }
                 },
                 ExtractJwt.fromAuthHeaderAsBearerToken(),
             ]),
