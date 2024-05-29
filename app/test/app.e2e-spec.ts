@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { AuthService } from 'src/auth/auth.service';
-import { UsersService } from 'src/services/users/users.service';
+import { UserService } from 'src/services/user/user.service';
 
 describe('AppController (e2e)', () => {
     let app: INestApplication;
@@ -26,7 +26,7 @@ describe('AppController (e2e)', () => {
                     useValue: mockAuthService,
                 },
                 {
-                    provide: UsersService,
+                    provide: UserService,
                     useValue: mockUserService,
                 },
             ],
