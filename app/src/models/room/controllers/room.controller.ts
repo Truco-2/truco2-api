@@ -15,6 +15,7 @@ import { FormatResponseInterceptor } from 'src/common/interceptors/format-respon
 import { RoomService } from '../services/room.service';
 import { RoomGateway } from '../gateways/room.gateway';
 import { RoomResourceDto } from '../dtos/room.dto';
+import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
 
 @ApiBearerAuth()
 @UseInterceptors(FormatResponseInterceptor)
@@ -34,10 +35,13 @@ export class RoomController {
     @UseGuards(JwtAuthGuard)
     @Post('/create')
     async create(
+        @GetUser() user,
         @Body()
         data: RoomResourceDto,
     ): Promise<Room> {
-        const room = await this.roomService.create(data);
+        const room = await this.roomService.create(user.userId, data);
+
+        await this.roomService.enter(user.userId, room.code);
 
         this.roomGateway.updateAvailableList(room);
 
@@ -46,7 +50,7 @@ export class RoomController {
 
     @UseGuards(JwtAuthGuard)
     @Post('/enter')
-    async enter(@Query('code') code: string): Promise<Room> {
-        return await this.roomService.enter(code);
+    async enter(@GetUser() user, @Query('code') code: string): Promise<Room> {
+        return await this.roomService.enter(user.userId, code);
     }
 }
