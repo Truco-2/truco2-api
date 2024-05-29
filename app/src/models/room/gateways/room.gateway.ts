@@ -7,7 +7,7 @@ import {
 import { Room } from '@prisma/client';
 import { Socket } from 'socket.io';
 import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
-import { RoomService } from 'src/services/room/room.service';
+import { RoomService } from '../services/room.service';
 
 @WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
