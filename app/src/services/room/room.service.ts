@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma.service';
 import { RoomResourceDto } from 'src/types/room.dto';
 
 @Injectable()
-export class RoomsService {
+export class RoomService {
     constructor(private prisma: PrismaService) {}
 
     async listAvailables(): Promise<Room[] | null> {
