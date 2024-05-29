@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/services/users/users.service';
+import { UserService } from 'src/services/user/user.service';
 
 describe('AuthService', () => {
     let service: AuthService;
@@ -16,7 +16,7 @@ describe('AuthService', () => {
                 AuthService,
                 JwtService,
                 {
-                    provide: UsersService,
+                    provide: UserService,
                     useValue: mockUserService,
                 },
             ],
