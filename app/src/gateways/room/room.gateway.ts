@@ -7,14 +7,14 @@ import {
 import { Room } from '@prisma/client';
 import { Socket } from 'socket.io';
 import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
-import { RoomsService } from 'src/services/rooms/rooms.service';
+import { RoomService } from 'src/services/room/room.service';
 
 @WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
     availableRoomsListKey = 'available-rooms-list';
     availableRoomsListMsg = 'available-rooms-list-msg';
 
-    constructor(private roomsService: RoomsService) {}
+    constructor(private RoomService: RoomService) {}
 
     @WebSocketServer() server;
 
@@ -35,7 +35,7 @@ export class RoomGateway {
     async handleEnterAvailableRoomListing(client: Socket): Promise<void> {
         client.join(this.availableRoomsListKey);
 
-        const availableRooms = await this.roomsService.listAvailables();
+        const availableRooms = await this.RoomService.listAvailables();
 
         this.server
             .to(client.id)
