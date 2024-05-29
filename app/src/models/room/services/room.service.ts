@@ -13,14 +13,22 @@ export class RoomService {
             where: {
                 isPrivate: false,
             },
+            include: {
+                owner: true,
+                UsersRooms: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
         });
     }
 
-    async create(data: RoomResourceDto): Promise<Room | null> {
+    async create(ownerId: number, data: RoomResourceDto): Promise<Room | null> {
         const room = {
             code: faker.seed().toString(),
             name: data.name,
-            ownerId: 1,
+            ownerId: ownerId,
             isPrivate: data.isPrivate,
             maxPlayers: data.maxPlayers,
             password: data.password,
@@ -31,7 +39,7 @@ export class RoomService {
         });
     }
 
-    async enter(code: string): Promise<Room | null> {
+    async enter(userId: number, code: string): Promise<Room | null> {
         const room = await this.prisma.room.findFirst({
             where: {
                 code: code,
@@ -41,10 +49,12 @@ export class RoomService {
             },
         });
 
-        room.UsersRooms.push({
-            userId: 90,
-            roomId: 40,
-            assignedAt: new Date(),
+        await this.prisma.usersRooms.create({
+            data: {
+                userId: userId,
+                roomId: room.id,
+                assignedAt: new Date(),
+            },
         });
 
         return room;
