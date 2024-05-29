@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { Socket, io } from 'socket.io-client';
-import { RoomGateway } from '../../../src/gateways/room/room.gateway';
+import { RoomGateway } from '../../../src/models/room/gateways/room.gateway';
 
 describe('AppController (e2e)', () => {
     let app: INestApplication;
