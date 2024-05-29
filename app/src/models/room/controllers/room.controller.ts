@@ -2,7 +2,6 @@ import {
     Body,
     Controller,
     Get,
-    HttpCode,
     Post,
     Query,
     UseGuards,
@@ -26,14 +25,12 @@ export class RoomController {
         private readonly roomGateway: RoomGateway,
     ) {}
 
-    @HttpCode(204)
     @UseGuards(AuthGuard('jwt'))
     @Get('/')
     async get(): Promise<Room[]> {
         return await this.roomService.listAvailables();
     }
 
-    @HttpCode(204)
     @UseGuards(JwtAuthGuard)
     @Post('/create')
     async create(
@@ -47,7 +44,6 @@ export class RoomController {
         return room;
     }
 
-    @HttpCode(204)
     @UseGuards(JwtAuthGuard)
     @Post('/enter')
     async enter(@Query('code') code: string): Promise<Room> {
