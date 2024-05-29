@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
 import {
     SubscribeMessage,
     WebSocketGateway,
@@ -8,6 +8,7 @@ import { Room } from '@prisma/client';
 import { Socket } from 'socket.io';
 import { RoomService } from '../services/room.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
 
 @WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
@@ -18,10 +19,7 @@ export class RoomGateway {
 
     @WebSocketServer() server;
 
-    handleConnection(client: Socket): void {
-        console.log(client.id);
-    }
-
+    @UseFilters(SocketIoExceptionFilter)
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('message')
     handleMessage(client: Socket, message: string): void {
@@ -30,6 +28,8 @@ export class RoomGateway {
         this.server.emit('server-message', msg);
     }
 
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter-available-room-listing')
     async handleEnterAvailableRoomListing(client: Socket): Promise<void> {
         client.join(this.availableRoomsListKey);
