@@ -4,6 +4,7 @@ import {
     Get,
     Post,
     Query,
+    UseFilters,
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { RoomService } from '../services/room.service';
 import { RoomGateway } from '../gateways/room.gateway';
 import { RoomResourceDto } from '../dtos/room.dto';
 import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
+import { HttpExceptionFilter } from 'src/common/filters/http-exception/http-exception.filter';
 
 @ApiBearerAuth()
 @UseInterceptors(FormatResponseInterceptor)
@@ -33,6 +35,7 @@ export class RoomController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @UseFilters(HttpExceptionFilter)
     @Post('/create')
     async create(
         @GetUser() user,
