@@ -54,8 +54,13 @@ export class RoomController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @UseFilters(HttpExceptionFilter)
     @Post('/enter')
     async enter(@GetUser() user, @Query() query: RoomCodeDto): Promise<Room> {
-        return await this.roomService.enter(user.userId, query.code);
+        const room = await this.roomService.enter(user.userId, query.code);
+
+        this.roomGateway.updateAvailableList(room);
+
+        return room;
     }
 }
