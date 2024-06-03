@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { AuthService } from 'src/auth/auth.service';
-import { UserService } from 'src/services/user/user.service';
+import { UserService } from 'src/models/user/services/user.service';
 
 describe('AppController (e2e)', () => {
     let app: INestApplication;
@@ -56,7 +56,7 @@ describe('AppController (e2e)', () => {
                 username: 'user',
                 password: 'password',
             })
-            .expect(201)
+            .expect(HttpStatus.CREATED)
             .expect('{"acess_token":"valid_token"}');
     });
 
@@ -75,7 +75,7 @@ describe('AppController (e2e)', () => {
 
         return request(app.getHttpServer())
             .get('/guest')
-            .expect(200)
+            .expect(HttpStatus.OK)
             .expect('{"acess_token":"valid_token"}');
     });
 });
