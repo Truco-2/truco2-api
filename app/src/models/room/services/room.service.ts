@@ -16,10 +16,10 @@ export class RoomService {
                 status: RoomStatus.OPEN,
             },
             include: {
-                owner: true,
+                Owner: true,
                 UsersRooms: {
                     include: {
-                        user: true,
+                        User: true,
                     },
                 },
             },
