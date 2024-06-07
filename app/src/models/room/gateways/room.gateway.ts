@@ -29,12 +29,6 @@ export class RoomGateway {
         @ConnectedSocket() client: Socket,
     ): Promise<void> {
         client.join(this.availableRoomsListKey);
-
-        const availableRooms = await this.roomService.listAvailables();
-
-        this.server
-            .to(client.id)
-            .emit(this.availableRoomsListAllMsg, availableRooms);
     }
 
     @UseFilters(SocketIoExceptionFilter)
