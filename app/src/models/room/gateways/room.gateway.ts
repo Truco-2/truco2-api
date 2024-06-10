@@ -6,8 +6,8 @@ import {
 } from '@nestjs/websockets';
 import { Room } from '@prisma/client';
 import { Socket } from 'socket.io';
+import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
 import { RoomService } from '../services/room.service';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 
 @WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
@@ -18,11 +18,12 @@ export class RoomGateway {
 
     @WebSocketServer() server;
 
+    @UseGuards(LocalAuthGuard)
     handleConnection(client: Socket): void {
         console.log(client.id);
     }
 
-    @UseGuards(JwtAuthGuard)
+    // @UseGuards(LocalAuthGuard)
     @SubscribeMessage('message')
     handleMessage(client: Socket, message: string): void {
         const msg = `${client.id} sends: ${message}`;
