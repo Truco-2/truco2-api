@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-    IsAlphanumeric,
     IsBoolean,
     IsNumber,
     IsString,
@@ -12,7 +11,6 @@ import {
 export class RoomResourceDto {
     @ApiProperty()
     @IsString()
-    @IsAlphanumeric()
     @Length(3, 20)
     name: string;
 

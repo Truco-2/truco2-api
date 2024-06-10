@@ -18,7 +18,6 @@ import { RoomGateway } from '../gateways/room.gateway';
 import { RoomResourceDto } from '../dtos/room.dto';
 import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception/http-exception.filter';
-import { RoomCodeDto } from '../dtos/room-code.dto';
 
 @ApiBearerAuth()
 @UseInterceptors(FormatResponseInterceptor)
@@ -30,7 +29,6 @@ export class RoomController {
     ) {}
 
     @UseGuards(AuthGuard('jwt'))
-    @UseFilters(HttpExceptionFilter)
     @Get('/')
     async get(): Promise<Room[]> {
         return await this.roomService.listAvailables();
@@ -55,7 +53,7 @@ export class RoomController {
 
     @UseGuards(JwtAuthGuard)
     @Post('/enter')
-    async enter(@GetUser() user, @Query() query: RoomCodeDto): Promise<Room> {
-        return await this.roomService.enter(user.userId, query.code);
+    async enter(@GetUser() user, @Query('code') code: string): Promise<Room> {
+        return await this.roomService.enter(user.userId, code);
     }
 }
