@@ -1,22 +1,94 @@
-import { Controller, Request, Post, UseGuards, Get } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from './auth/auth.service';
-import { LocalAuthGuard } from './auth/local-auth.guard';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import {
+    Controller,
+    Get,
+    Param,
+    Post,
+    Body,
+    Put,
+    Delete,
+} from '@nestjs/common';
+import { UserService } from './user.service';
+import { PostService } from './post.service';
+import { User as UserModel, Post as PostModel } from '@prisma/client';
 
 @Controller()
 export class AppController {
-    constructor(private authService: AuthService) {}
+    constructor(
+        private readonly userService: UserService,
+        private readonly postService: PostService,
+    ) {}
 
-    @UseGuards(LocalAuthGuard)
-    @Post('auth/login')
-    async login(@Request() req) {
-        return this.authService.login(req.user);
+    @Get('/')
+    getHello(): string {
+        return `Hello World 2`;
     }
 
-    @UseGuards(JwtAuthGuard)
-    @Get('profile')
-    getProfile(@Request() req) {
-        return req.user;
+    @Get('post/:id')
+    async getPostById(@Param('id') id: string): Promise<PostModel> {
+        return this.postService.post({ id: Number(id) });
+    }
+
+    @Get('feed')
+    async getPublishedPosts(): Promise<PostModel[]> {
+        return this.postService.posts({
+            where: { published: true },
+        });
+    }
+
+    @Get('filtered-posts/:searchString')
+    async getFilteredPosts(
+        @Param('searchString') searchString: string,
+    ): Promise<PostModel[]> {
+        return this.postService.posts({
+            where: {
+                OR: [
+                    {
+                        title: { contains: searchString },
+                    },
+                    {
+                        content: { contains: searchString },
+                    },
+                ],
+            },
+        });
+    }
+
+    @Post('post')
+    async createDraft(
+        @Body()
+        postData: {
+            title: string;
+            content?: string;
+            authorEmail: string;
+        },
+    ): Promise<PostModel> {
+        const { title, content, authorEmail } = postData;
+        return this.postService.createPost({
+            title,
+            content,
+            author: {
+                connect: { email: authorEmail },
+            },
+        });
+    }
+
+    @Post('user')
+    async signupUser(
+        @Body() userData: { name?: string; email: string },
+    ): Promise<UserModel> {
+        return this.userService.createUser(userData);
+    }
+
+    @Put('publish/:id')
+    async publishPost(@Param('id') id: string): Promise<PostModel> {
+        return this.postService.updatePost({
+            where: { id: Number(id) },
+            data: { published: true },
+        });
+    }
+
+    @Delete('post/:id')
+    async deletePost(@Param('id') id: string): Promise<PostModel> {
+        return this.postService.deletePost({ id: Number(id) });
     }
 }
