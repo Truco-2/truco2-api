@@ -48,9 +48,7 @@ export class RoomController {
 
         await this.roomService.enter(user.userId, room.code);
 
-        if (!room.isPrivate) {
-            this.roomGateway.updateAvailableList(room);
-        }
+        this.roomGateway.updateAvailableList(room);
 
         return room;
     }
@@ -61,9 +59,7 @@ export class RoomController {
     async enter(@GetUser() user, @Query() query: RoomCodeDto): Promise<Room> {
         const room = await this.roomService.enter(user.userId, query.code);
 
-        if (!room.isPrivate) {
-            this.roomGateway.updateAvailableList(room);
-        }
+        this.roomGateway.updateAvailableList(room);
 
         return room;
     }
