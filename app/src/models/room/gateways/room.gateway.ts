@@ -1,7 +1,5 @@
 import { UseFilters, UseGuards } from '@nestjs/common';
 import {
-    ConnectedSocket,
-    MessageBody,
     SubscribeMessage,
     WebSocketGateway,
     WebSocketServer,
@@ -15,7 +13,6 @@ import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/
 @WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
     availableRoomsListKey = 'available-rooms-list';
-    availableRoomsListAllMsg = 'available-rooms-list-all-msg';
     availableRoomsListMsg = 'available-rooms-list-msg';
 
     constructor(private roomService: RoomService) {}
@@ -24,33 +21,24 @@ export class RoomGateway {
 
     @UseFilters(SocketIoExceptionFilter)
     @UseGuards(JwtAuthGuard)
+    @SubscribeMessage('message')
+    handleMessage(client: Socket, message: string): void {
+        const msg = `${client.id} sends: ${message}`;
+
+        this.server.emit('server-message', msg);
+    }
+
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter-available-room-listing')
-    async handleEnterAvailableRoomListing(
-        @ConnectedSocket() client: Socket,
-    ): Promise<void> {
+    async handleEnterAvailableRoomListing(client: Socket): Promise<void> {
         client.join(this.availableRoomsListKey);
 
         const availableRooms = await this.roomService.listAvailables();
 
         this.server
             .to(client.id)
-            .emit(this.availableRoomsListAllMsg, availableRooms);
-    }
-
-    @UseFilters(SocketIoExceptionFilter)
-    @UseGuards(JwtAuthGuard)
-    @SubscribeMessage('verify-available-room-listing')
-    async handleVerifyAvailableRoomListing(
-        @MessageBody() count: number,
-        @ConnectedSocket() client: Socket,
-    ): Promise<void> {
-        const availableRooms = await this.roomService.listAvailables();
-
-        if (availableRooms.length != count) {
-            this.server
-                .to(client.id)
-                .emit(this.availableRoomsListAllMsg, availableRooms);
-        }
+            .emit(this.availableRoomsListMsg, availableRooms);
     }
 
     updateAvailableList(room: Room): void {
