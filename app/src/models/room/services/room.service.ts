@@ -25,15 +25,17 @@ export class RoomService {
     }
 
     async create(ownerId: number, data: RoomResourceDto): Promise<Room | null> {
+        const room = {
+            code: faker.seed().toString(),
+            name: data.name,
+            ownerId: ownerId,
+            isPrivate: data.isPrivate,
+            maxPlayers: data.maxPlayers,
+            password: data.password,
+        };
+
         return await this.prisma.room.create({
-            data: {
-                code: await this.getNewCode(),
-                name: data.name,
-                ownerId: ownerId,
-                isPrivate: data.isPrivate,
-                maxPlayers: data.maxPlayers,
-                password: data.password,
-            },
+            data: room,
         });
     }
 
@@ -47,16 +49,6 @@ export class RoomService {
             },
         });
 
-        if (
-            room.UsersRooms.findIndex((userRoom) => userRoom.userId == userId)
-        ) {
-            throw new Error('player is already in room');
-        }
-
-        if (room.UsersRooms.length >= room.maxPlayers) {
-            throw new Error('room is already full of players');
-        }
-
         await this.prisma.usersRooms.create({
             data: {
                 userId: userId,
@@ -66,27 +58,5 @@ export class RoomService {
         });
 
         return room;
-    }
-
-    async getNewCode(): Promise<string> {
-        let code: string = '';
-
-        let roomWithCode = [{}];
-
-        while (roomWithCode.length > 0) {
-            code = faker.string.alphanumeric({
-                casing: 'upper',
-                length: 6,
-                exclude: ['O', 'I'],
-            });
-
-            roomWithCode = await this.prisma.room.findMany({
-                where: {
-                    code: code,
-                },
-            });
-        }
-
-        return code;
     }
 }
