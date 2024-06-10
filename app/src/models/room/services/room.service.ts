@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Room } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+import { PrismaService } from 'src/prisma.service';
 import { RoomResourceDto } from '../dtos/room.dto';
-import { PrismaService } from 'src/providers/prisma/prisma.service';
 
 @Injectable()
 export class RoomService {
