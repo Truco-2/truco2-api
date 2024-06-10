@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Room } from '@prisma/client';
 import { faker } from '@faker-js/faker';
-import { RoomResourceDto } from '../dtos/room.dto';
+import { RoomDto } from '../dtos/room.dto';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
 import { RoomStatus } from 'src/common/enums/room-status.enum';
+import { plainToClass, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class RoomService {
     constructor(private prisma: PrismaService) {}
 
-    async listAvailables(): Promise<Room[] | null> {
-        return this.prisma.room.findMany({
+    async listAvailables(): Promise<RoomDto[] | null> {
+        const rooms = await this.prisma.room.findMany({
             where: {
-                isPrivate: false,
                 status: RoomStatus.OPEN,
             },
             include: {
@@ -24,12 +23,16 @@ export class RoomService {
                 },
             },
         });
+
+        return plainToInstance(RoomDto, rooms, {
+            excludeExtraneousValues: true,
+        });
     }
 
-    async create(ownerId: number, data: RoomResourceDto): Promise<Room | null> {
+    async create(ownerId: number, data: RoomDto): Promise<RoomDto | null> {
         await this.verifyUserHasRoom(ownerId);
 
-        return await this.prisma.room.create({
+        const room = await this.prisma.room.create({
             data: {
                 code: await this.getNewCode(),
                 name: data.name,
@@ -40,9 +43,39 @@ export class RoomService {
                 password: data.password,
             },
         });
+
+        return plainToInstance(RoomDto, room, {
+            excludeExtraneousValues: true,
+        });
     }
 
-    async enter(userId: number, code: string): Promise<Room | null> {
+    async find(code: string): Promise<RoomDto | null> {
+        const room = await this.prisma.room.findFirst({
+            where: {
+                code: code,
+                status: RoomStatus.OPEN,
+            },
+            include: {
+                owner: true,
+                UsersRooms: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+        });
+
+        if (room === null) {
+            throw new Error('Could not find room with code :' + code);
+        }
+
+        return plainToInstance(RoomDto, room, {
+            excludeExtraneousValues: true,
+            //groups: ['expose_user_groups'],
+        });
+    }
+
+    async enter(userId: number, code: string): Promise<RoomDto | null> {
         const room = await this.prisma.room.findFirst({
             where: {
                 code: code,
@@ -52,6 +85,10 @@ export class RoomService {
                 UsersRooms: true,
             },
         });
+
+        if (room === null) {
+            throw new Error('Could not find room with code :' + code);
+        }
 
         if (room.UsersRooms.length >= room.maxPlayers) {
             throw new Error('room is already full of players');
@@ -66,8 +103,7 @@ export class RoomService {
                 assignedAt: new Date(),
             },
         });
-
-        return room;
+        return plainToClass(RoomDto, room);
     }
 
     async getNewCode(): Promise<string> {
