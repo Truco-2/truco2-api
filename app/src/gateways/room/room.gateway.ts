@@ -4,17 +4,12 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { Room } from '@prisma/client';
 import { Socket } from 'socket.io';
 import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
-import { RoomsService } from 'src/services/rooms/rooms.service';
 
 @WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
-    availableRoomsListKey = 'available-rooms-list';
-    availableRoomsListMsg = 'available-rooms-list-msg';
-
-    constructor(private roomsService: RoomsService) {}
+    constructor() {}
 
     @WebSocketServer() server;
 
@@ -23,7 +18,7 @@ export class RoomGateway {
         console.log(client.id);
     }
 
-    // @UseGuards(LocalAuthGuard)
+    @UseGuards(LocalAuthGuard)
     @SubscribeMessage('message')
     handleMessage(client: Socket, message: string): void {
         const msg = `${client.id} sends: ${message}`;
@@ -32,19 +27,16 @@ export class RoomGateway {
     }
 
     @SubscribeMessage('enter-available-room-listing')
-    async handleEnterAvailableRoomListing(client: Socket): Promise<void> {
-        client.join(this.availableRoomsListKey);
-
-        const availableRooms = await this.roomsService.listAvailables();
-
+    handleEnterAvailableRoomListing(
+        client: Socket,
+        body: { gameRoomId: number },
+    ): void {
+        client.join(body.gameRoomId.toString());
         this.server
-            .to(client.id)
-            .emit(this.availableRoomsListMsg, availableRooms);
-    }
-
-    updateAvailableList(room: Room): void {
-        this.server
-            .to(this.availableRoomsListKey)
-            .emit(this.availableRoomsListMsg, room);
+            .to(body.gameRoomId)
+            .emit(
+                'server-message',
+                `${client.id} has entered the room ${body.gameRoomId}`,
+            );
     }
 }

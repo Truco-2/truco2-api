@@ -2,21 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { Room } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import { PrismaService } from 'src/prisma.service';
-import { RoomResourceDto } from 'src/types/room.dto';
+import { IRoomResource } from 'src/types/rooms';
 
 @Injectable()
 export class RoomsService {
     constructor(private prisma: PrismaService) {}
 
     async listAvailables(): Promise<Room[] | null> {
-        return this.prisma.room.findMany({
-            where: {
-                isPrivate: false,
-            },
-        });
+        return this.prisma.room.findMany();
     }
 
-    async create(data: RoomResourceDto): Promise<Room | null> {
+    async create(data: IRoomResource): Promise<Room | null> {
         const room = {
             code: faker.seed().toString(),
             name: data.name,
@@ -26,15 +22,15 @@ export class RoomsService {
             password: data.password,
         };
 
-        return await this.prisma.room.create({
+        return this.prisma.room.create({
             data: room,
         });
     }
 
-    async enter(code: string): Promise<Room | null> {
+    async enter(Code: string): Promise<Room | null> {
         const room = await this.prisma.room.findFirst({
             where: {
-                code: code,
+                code: Code,
             },
             include: {
                 UsersRooms: true,
