@@ -6,13 +6,13 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
+import { Room } from '@prisma/client';
 import { Socket } from 'socket.io';
 import { RoomService } from '../services/room.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
-import { RoomDto } from '../dtos/room.dto';
 
-@WebSocketGateway({ namespace: 'room', cors: true })
+@WebSocketGateway({ namespace: 'room' })
 export class RoomGateway {
     availableRoomsListKey = 'available-rooms-list';
     availableRoomsListAllMsg = 'available-rooms-list-all-msg';
@@ -47,7 +47,7 @@ export class RoomGateway {
         }
     }
 
-    updateAvailableList(room: RoomDto): void {
+    updateAvailableList(room: Room): void {
         this.server
             .to(this.availableRoomsListKey)
             .emit(this.availableRoomsListMsg, room);
