@@ -11,10 +11,9 @@ async function bootstrap() {
             'API for the Truco 2 application, see more in https://github.com/Truco-2',
         )
         .setVersion('1.0')
-        .addBearerAuth()
         .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('swagger', app, document);
+    SwaggerModule.setup('api', app, document);
 
     await app.listen(3000);
 }
