@@ -13,7 +13,7 @@ import { Room } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { FormatResponseInterceptor } from 'src/common/interceptors/format-response/format-response.interceptor';
 import { RoomGateway } from 'src/gateways/room/room.gateway';
-import { RoomService } from 'src/services/room/room.service';
+import { RoomsService } from 'src/services/rooms/rooms.service';
 import { RoomResourceDto } from 'src/types/room.dto';
 
 @ApiBearerAuth()
@@ -21,14 +21,14 @@ import { RoomResourceDto } from 'src/types/room.dto';
 @Controller('rooms')
 export class RoomsController {
     constructor(
-        private RoomService: RoomService,
+        private roomsService: RoomsService,
         private readonly roomGateway: RoomGateway,
     ) {}
 
     @UseGuards(AuthGuard('jwt'))
     @Get('/')
     async get(): Promise<Room[]> {
-        return await this.RoomService.listAvailables();
+        return await this.roomsService.listAvailables();
     }
 
     @UseGuards(JwtAuthGuard)
@@ -37,7 +37,7 @@ export class RoomsController {
         @Body()
         data: RoomResourceDto,
     ): Promise<Room> {
-        const room = await this.RoomService.create(data);
+        const room = await this.roomsService.create(data);
 
         this.roomGateway.updateAvailableList(room);
 
@@ -47,6 +47,6 @@ export class RoomsController {
     @UseGuards(JwtAuthGuard)
     @Post('/enter')
     async enter(@Query('code') code: string): Promise<Room> {
-        return await this.RoomService.enter(code);
+        return await this.roomsService.enter(code);
     }
 }
