@@ -11,13 +11,4 @@ export class UsersService {
             where: { name: username },
         });
     }
-
-    async generateGuestUser(): Promise<User> {
-        const date = Date.now();
-        return this.prisma.user.create({
-            data: {
-                name: 'guest' + date,
-            },
-        });
-    }
 }
