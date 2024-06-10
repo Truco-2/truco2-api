@@ -12,7 +12,7 @@ import { RoomService } from '../services/room.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
 
-@WebSocketGateway({ namespace: 'room' })
+@WebSocketGateway({ namespace: 'room',  cors: true })
 export class RoomGateway {
     availableRoomsListKey = 'available-rooms-list';
     availableRoomsListAllMsg = 'available-rooms-list-all-msg';
