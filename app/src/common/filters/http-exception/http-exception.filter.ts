@@ -4,7 +4,6 @@ import {
     Catch,
     ExceptionFilter,
     HttpException,
-    HttpStatus,
     UnauthorizedException,
 } from '@nestjs/common';
 import { isArray } from 'class-validator';
@@ -16,7 +15,7 @@ export class HttpExceptionFilter<T> implements ExceptionFilter {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
 
-        let statusCode = HttpStatus.BAD_REQUEST;
+        let statusCode = 400;
         const message = [];
 
         const badReq = exception as BadRequestException;
@@ -37,7 +36,7 @@ export class HttpExceptionFilter<T> implements ExceptionFilter {
             message.push(errorReq.message);
         }
 
-        response.status(statusCode).json({
+        response.status(400).json({
             success: false,
             message: message,
             status: statusCode,
