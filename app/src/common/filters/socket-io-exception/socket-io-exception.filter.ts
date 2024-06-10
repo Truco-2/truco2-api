@@ -11,8 +11,5 @@ export class SocketIoExceptionFilter implements ExceptionFilter {
     catch(exception: UnauthorizedException, host: ArgumentsHost) {
         const socketClient: Socket = host.switchToWs().getClient();
         socketClient.emit('error', 'Unauthorized');
-        socketClient.rooms.forEach((room) => {
-            socketClient.leave(room);
-        });
     }
 }
