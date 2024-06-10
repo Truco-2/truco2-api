@@ -1,8 +1,0 @@
-services:
-  # image project
-  app:
-    build:
-      context: ./app
-    command: sh -c "npm run test"
-    restart: no
-    container_name: truco2-api-app-unit-test
