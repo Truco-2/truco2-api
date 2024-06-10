@@ -14,7 +14,7 @@ export class RoomGateway {
     availableRoomsListKey = 'available-rooms-list';
     availableRoomsListMsg = 'available-rooms-list-msg';
 
-    constructor(private roomService: RoomService) {}
+    constructor(private RoomService: RoomService) {}
 
     @WebSocketServer() server;
 
@@ -35,7 +35,7 @@ export class RoomGateway {
     async handleEnterAvailableRoomListing(client: Socket): Promise<void> {
         client.join(this.availableRoomsListKey);
 
-        const availableRooms = await this.roomService.listAvailables();
+        const availableRooms = await this.RoomService.listAvailables();
 
         this.server
             .to(client.id)

@@ -19,16 +19,16 @@ import { RoomResourceDto } from 'src/types/room.dto';
 @ApiBearerAuth()
 @UseInterceptors(FormatResponseInterceptor)
 @Controller('rooms')
-export class RoomController {
+export class RoomsController {
     constructor(
-        private roomService: RoomService,
+        private RoomService: RoomService,
         private readonly roomGateway: RoomGateway,
     ) {}
 
     @UseGuards(AuthGuard('jwt'))
     @Get('/')
     async get(): Promise<Room[]> {
-        return await this.roomService.listAvailables();
+        return await this.RoomService.listAvailables();
     }
 
     @UseGuards(JwtAuthGuard)
@@ -37,7 +37,7 @@ export class RoomController {
         @Body()
         data: RoomResourceDto,
     ): Promise<Room> {
-        const room = await this.roomService.create(data);
+        const room = await this.RoomService.create(data);
 
         this.roomGateway.updateAvailableList(room);
 
@@ -47,6 +47,6 @@ export class RoomController {
     @UseGuards(JwtAuthGuard)
     @Post('/enter')
     async enter(@Query('code') code: string): Promise<Room> {
-        return await this.roomService.enter(code);
+        return await this.RoomService.enter(code);
     }
 }
