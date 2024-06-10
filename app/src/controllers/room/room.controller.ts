@@ -2,7 +2,6 @@ import {
     Body,
     Controller,
     Get,
-    HttpCode,
     Post,
     Query,
     UseGuards,
@@ -13,27 +12,25 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Room } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { FormatResponseInterceptor } from 'src/common/interceptors/format-response/format-response.interceptor';
-import { RoomService } from '../services/room.service';
-import { RoomGateway } from '../gateways/room.gateway';
-import { RoomResourceDto } from '../dtos/room.dto';
+import { RoomGateway } from 'src/gateways/room/room.gateway';
+import { RoomService } from 'src/services/room/room.service';
+import { RoomResourceDto } from 'src/types/room.dto';
 
 @ApiBearerAuth()
 @UseInterceptors(FormatResponseInterceptor)
 @Controller('rooms')
 export class RoomController {
     constructor(
-        private readonly roomService: RoomService,
+        private roomService: RoomService,
         private readonly roomGateway: RoomGateway,
     ) {}
 
-    @HttpCode(204)
     @UseGuards(AuthGuard('jwt'))
     @Get('/')
     async get(): Promise<Room[]> {
         return await this.roomService.listAvailables();
     }
 
-    @HttpCode(204)
     @UseGuards(JwtAuthGuard)
     @Post('/create')
     async create(
@@ -47,7 +44,6 @@ export class RoomController {
         return room;
     }
 
-    @HttpCode(204)
     @UseGuards(JwtAuthGuard)
     @Post('/enter')
     async enter(@Query('code') code: string): Promise<Room> {
