@@ -12,14 +12,6 @@ import {
     ValidateIf,
     ValidateNested,
 } from 'class-validator';
-import exp from 'constants';
-
-export class OwnerResource {
-    @Expose()
-    id: number;
-    @Expose()
-    name: string;
-}
 
 export class UserResource {
     @Expose()
@@ -43,7 +35,7 @@ export class RoomDto {
 
     @ApiProperty()
     @IsString()
-    @Matches(/^[a-zA-Z0-9.]*$/, {
+    @Matches(/^[a-zA-Z0-9.\s]*$/, {
         message: 'Room must not have any special symbol',
     })
     @Length(3, 20)
@@ -69,12 +61,8 @@ export class RoomDto {
     @IsNotEmpty()
     password?: string;
 
-    @Type(() => OwnerResource)
-    @Expose()
-    owner: OwnerResource;
-
     @ValidateNested({ each: true })
     @Type(() => UsersRoomsResource)
     @Expose()
-    UsersRooms: UsersRoomsResource[];
+    usersRooms: UsersRoomsResource[];
 }

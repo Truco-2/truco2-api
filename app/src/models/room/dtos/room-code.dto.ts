@@ -7,4 +7,7 @@ export class RoomCodeDto {
     @IsAlphanumeric()
     @Length(6, 6)
     code: string;
+
+    @ApiProperty()
+    password?: string;
 }

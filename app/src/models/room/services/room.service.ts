@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { faker } from '@faker-js/faker';
+import { faker, ro_MD } from '@faker-js/faker';
 import { RoomDto } from '../dtos/room.dto';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
-import { RoomStatus } from 'src/common/enums/room-status.enum';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
+import { RoomStatus } from '@prisma/client';
+import { RoomCodeDto } from '../dtos/room-code.dto';
 
 @Injectable()
 export class RoomService {
@@ -12,11 +13,10 @@ export class RoomService {
     async listAvailables(): Promise<RoomDto[] | null> {
         const rooms = await this.prisma.room.findMany({
             where: {
-                status: RoomStatus.OPEN,
+                status: RoomStatus.WAITING,
             },
             include: {
-                owner: true,
-                UsersRooms: {
+                usersRooms: {
                     include: {
                         user: true,
                     },
@@ -29,18 +29,23 @@ export class RoomService {
         });
     }
 
-    async create(ownerId: number, data: RoomDto): Promise<RoomDto | null> {
-        await this.verifyUserHasRoom(ownerId);
+    async create(userId: number, data: RoomDto): Promise<RoomDto | null> {
+        await this.verifyUserHasRoom(userId);
 
         const room = await this.prisma.room.create({
             data: {
                 code: await this.getNewCode(),
                 name: data.name,
-                ownerId: ownerId,
-                status: RoomStatus.OPEN,
+                ownerId: userId,
+                status: RoomStatus.WAITING,
                 isPrivate: data.isPrivate,
                 maxPlayers: data.maxPlayers,
                 password: data.password,
+                usersRooms: {
+                    create: {
+                        userId: userId,
+                    },
+                },
             },
         });
 
@@ -53,11 +58,10 @@ export class RoomService {
         const room = await this.prisma.room.findFirst({
             where: {
                 code: code,
-                status: RoomStatus.OPEN,
+                status: RoomStatus.WAITING,
             },
             include: {
-                owner: true,
-                UsersRooms: {
+                usersRooms: {
                     include: {
                         user: true,
                     },
@@ -71,39 +75,60 @@ export class RoomService {
 
         return plainToInstance(RoomDto, room, {
             excludeExtraneousValues: true,
-            //groups: ['expose_user_groups'],
         });
     }
 
-    async enter(userId: number, code: string): Promise<RoomDto | null> {
+    async enter(
+        resource: RoomCodeDto,
+        userId: number,
+    ): Promise<RoomDto | null> {
         const room = await this.prisma.room.findFirst({
             where: {
-                code: code,
-                status: RoomStatus.OPEN,
+                code: resource.code,
+                status: RoomStatus.WAITING,
             },
             include: {
-                UsersRooms: true,
+                usersRooms: true,
             },
         });
 
         if (room === null) {
-            throw new Error('Could not find room with code :' + code);
-        }
-
-        if (room.UsersRooms.length >= room.maxPlayers) {
-            throw new Error('room is already full of players');
+            throw new Error('Could not find room with code :' + resource.code);
         }
 
         await this.verifyUserHasRoom(userId);
 
-        await this.prisma.usersRooms.create({
+        if (room.usersRooms.length >= room.maxPlayers) {
+            throw new Error('Room is already full of players');
+        }
+
+        if (room.isPrivate) {
+            if (room.password !== resource.password) {
+                throw new Error('Could not enter in room: wrong password');
+            }
+        }
+
+        const updatedRoom = await this.prisma.room.update({
+            where: { id: room.id },
             data: {
-                userId: userId,
-                roomId: room.id,
-                assignedAt: new Date(),
+                usersRooms: {
+                    create: {
+                        userId: userId,
+                    },
+                },
+            },
+            include: {
+                usersRooms: {
+                    include: {
+                        user: true,
+                    },
+                },
             },
         });
-        return plainToClass(RoomDto, room);
+
+        return plainToInstance(RoomDto, updatedRoom, {
+            excludeExtraneousValues: true,
+        });
     }
 
     async getNewCode(): Promise<string> {
@@ -129,17 +154,71 @@ export class RoomService {
     }
 
     async verifyUserHasRoom(userId: number): Promise<void> {
-        const user = await this.prisma.$queryRaw`select 
-        *
-        from public.users u 
-        join public.users_rooms ur on ur.user_id = u.id 
-        join public.rooms r on r.id = ur.room_id 
-        where 
-        u.id = ${userId}
-        and r.status = ${RoomStatus.OPEN}`;
+        const room = await this.prisma.room.findFirst({
+            where: {
+                AND: [
+                    { NOT: { status: RoomStatus.FINISHED } },
+                    { usersRooms: { some: { userId: userId } } },
+                ],
+            },
+        });
 
-        if ((user as any[]).length > 0) {
-            throw new Error('user is already in room');
+        if (room !== null) {
+            throw new Error('You are already in a room');
         }
+    }
+
+    async exit(userId: number): Promise<boolean> {
+        const room = await this.prisma.room.findFirst({
+            where: {
+                AND: [
+                    { NOT: { status: RoomStatus.FINISHED } },
+                    { usersRooms: { some: { userId: userId } } },
+                ],
+            },
+            include: {
+                usersRooms: true,
+            },
+        });
+
+        if (room === null) {
+            throw new Error('You are not in a room');
+        }
+
+        const updatedRoom = await this.prisma.room.update({
+            where: { id: room.id },
+            data: {
+                usersRooms: {
+                    delete: {
+                        userId_roomId: {
+                            userId: userId,
+                            roomId: room.id,
+                        },
+                    },
+                },
+            },
+            include: {
+                usersRooms: true,
+            },
+        });
+
+        // If does not exist any player
+        if (updatedRoom.usersRooms.length == 0) {
+            await this.prisma.room.delete({
+                where: { id: room.id },
+            });
+        }
+        // If the owner exit the room
+        else if (room.ownerId === userId) {
+            const newOwner = updatedRoom.usersRooms[0].userId;
+            await this.prisma.room.update({
+                where: { id: room.id },
+                data: {
+                    ownerId: newOwner,
+                },
+            });
+        }
+
+        return true;
     }
 }
