@@ -12,10 +12,9 @@ model User {
   email      String?      @unique
   name       String       @unique
   password   String?
-  ownedRooms Room[]       @relation(name: "owned_rooms")
-  UsersRooms UsersRooms[]
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime     @updatedAt @map("updated_at")
+  usersRooms UsersRooms[]
 
   @@map("users")
 }
@@ -23,27 +22,62 @@ model User {
 model Room {
   id         Int          @id @default(autoincrement())
   name       String
-  status     Int          @default(1)
   code       String       @unique
   ownerId    Int          @map("owner_id")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
   isPrivate  Boolean      @default(false) @map("is_private")
   maxPlayers Int          @default(2) @map("max_players")
   password   String?
-  owner      User         @relation("owned_rooms", fields: [ownerId], references: [id])
-  UsersRooms UsersRooms[]
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime     @updatedAt @map("updated_at")
+  status     RoomStatus
+  usersRooms UsersRooms[]
 
   @@map("rooms")
 }
 
+model Card {
+  id          Int    @id @default(autoincrement())
+  value       Int    @unique
+  name        String
+  description String
+  suit        Suit
+  Play        Play[]
+
+  @@map("card")
+}
+
+model Play {
+  id     Int  @id @default(autoincrement())
+  userId Int  @map("user_id")
+  cardId Int  @map("card_id")
+  card   Card @relation(fields: [cardId], references: [id])
+
+  @@map("play")
+}
+
 model UsersRooms {
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int      @map("user_id")
-  Room       Room     @relation(fields: [roomId], references: [id])
-  roomId     Int      @map("room_id")
-  assignedAt DateTime @default(now()) @map("assigned_at")
+  userId Int  @map("user_id")
+  roomId Int  @map("room_id")
+  room   Room @relation(fields: [roomId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 
   @@id([userId, roomId])
   @@map("users_rooms")
+}
+
+enum Suit {
+  CLUBS
+  HEARTS
+  SPADES
+  DIAMONDS
+
+  @@map("suit")
+}
+
+enum RoomStatus {
+  WAITING
+  STARTED
+  FINISHED
+
+  @@map("room_status")
 }

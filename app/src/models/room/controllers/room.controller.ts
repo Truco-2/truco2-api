@@ -3,7 +3,6 @@ import {
     Controller,
     Get,
     Post,
-    Put,
     Query,
     UseFilters,
     UseGuards,
@@ -46,8 +45,6 @@ export class RoomController {
     ): Promise<RoomDto> {
         const room = await this.roomService.create(user.userId, data);
 
-        await this.roomService.enter(user.userId, room.code);
-
         if (!room.isPrivate) {
             this.roomGateway.updateAvailableList(room);
         }
@@ -58,8 +55,11 @@ export class RoomController {
     @UseGuards(JwtAuthGuard)
     @UseFilters(HttpExceptionFilter)
     @Post('/enter')
-    async enter(@GetUser() user, @Body() query: RoomCodeDto): Promise<RoomDto> {
-        const room = await this.roomService.enter(user.userId, query.code);
+    async enter(
+        @GetUser() user,
+        @Body() resource: RoomCodeDto,
+    ): Promise<RoomDto> {
+        const room = await this.roomService.enter(resource, user.userId);
 
         if (!room.isPrivate) {
             this.roomGateway.updateAvailableList(room);
@@ -76,11 +76,11 @@ export class RoomController {
         return room;
     }
 
-    // @UseGuards(JwtAuthGuard)
-    // @UseFilters(HttpExceptionFilter)
-    // @Post('/exit')
-    // async exit(@GetUser() user, @Query() query: RoomCodeDto): Promise<RoomDto> {
-    //     const room = await this.roomService.exit(user.id, query.code);
-    //     return room;
-    // }
+    @UseGuards(JwtAuthGuard)
+    @UseFilters(HttpExceptionFilter)
+    @Post('/exit')
+    async exit(@GetUser() user): Promise<boolean> {
+        // TO DO: Adicionar chamada websocket para avisar ao novo dono da sala
+        return await this.roomService.exit(user.userId);
+    }
 }
