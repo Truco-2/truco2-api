@@ -3,7 +3,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { AuthService } from 'src/auth/auth.service';
-import { UserService } from 'src/models/user/services/user.service';
+import { UserService } from 'src/modules/user/services/user.service';
 
 describe('AppController (e2e)', () => {
     let app: INestApplication;
