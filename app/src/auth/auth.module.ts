@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 import { jwtConstants } from './constants';
 import { LocalStrategy } from './local/local.strategy';
 import { JwtStrategy } from './jwt/jwt.strategy';
-import { UserModule } from 'src/models/user/user.module';
+import { UserModule } from 'src/modules/user/user.module';
 
 @Module({
     providers: [AuthService, LocalStrategy, JwtStrategy],
