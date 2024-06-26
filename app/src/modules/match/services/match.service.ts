@@ -106,7 +106,7 @@ export class MatchService {
             players: [],
             round: null,
             sky: null,
-            status: MatchStatus.STARTED,
+            status: MatchStatus.STARTING,
             unsedCards: [...Array(40).keys()],
         };
 
@@ -186,5 +186,28 @@ export class MatchService {
                 player.cards.push(this.getCardFromDeck(match));
             }
         });
+    }
+
+    verifyBetsRequest(match: Match): boolean {
+        match.status = MatchStatus.REQUESTING_BETS;
+
+        if (
+            match.players.find(
+                (player) => player.cards.length < player.cardsOnNextRound,
+            )
+        ) {
+            this.sortCards(match);
+        }
+
+        if (
+            match.players.find(
+                (player) =>
+                    player.type == PlayerType.USER && player.bet == null,
+            )
+        ) {
+            return false;
+        }
+
+        return true;
     }
 }

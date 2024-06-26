@@ -8,6 +8,7 @@ import {
 import { MatchService } from '../services/match.service';
 import { Socket } from 'socket.io';
 import { Match } from '../interfaces/match.interface';
+import { MatchStatus } from 'src/common/enums/match.enum';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
@@ -41,17 +42,44 @@ export class MatchGateway {
 
     async sendStartTimer(match: Match, counter: number): Promise<void> {
         setTimeout(() => {
-            this.server.to('match_' + match.id).emit('match-msg', {
-                code: 'START-TIMER',
-                data: {
-                    counter: counter,
-                },
-            });
+            if (match.status == MatchStatus.STARTING) {
+                this.server.to('match_' + match.id).emit('match-msg', {
+                    code: 'START-TIMER',
+                    data: {
+                        counter: counter,
+                    },
+                });
 
-            counter--;
+                counter--;
 
-            if (counter > 0) {
-                this.sendStartTimer(match, counter);
+                if (counter > 0) {
+                    this.sendStartTimer(match, counter);
+                } else {
+                    this.matchService.verifyBetsRequest(match);
+                    this.requestBets(match, 30);
+                }
+            }
+        }, 1000);
+    }
+
+    async requestBets(match: Match, counter): Promise<void> {
+        setTimeout(() => {
+            if (match.status == MatchStatus.REQUESTING_BETS) {
+                this.server.to('match_' + match.id).emit('match-msg', {
+                    code: 'REQUESTING-BETS',
+                    data: {
+                        counter: counter,
+                    },
+                });
+
+                counter--;
+
+                if (
+                    counter > 0 &&
+                    !this.matchService.verifyBetsRequest(match)
+                ) {
+                    this.requestBets(match, counter);
+                }
             }
         }, 1000);
     }
