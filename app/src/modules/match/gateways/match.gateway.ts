@@ -59,6 +59,25 @@ export class MatchGateway {
         });
     }
 
+    @SubscribeMessage('play')
+    async handlePlay(
+        @MessageBody() body: { matchId: number; card: number },
+        @ConnectedSocket() client: Socket,
+    ): Promise<void> {
+        const match = await this.matchService.makePlay(
+            body.matchId,
+            body.card,
+            client.id,
+        );
+
+        client.join('match_' + match.id);
+
+        this.server.to('match_' + match.id).emit('match-msg', {
+            code: 'PLAY',
+            data: match,
+        });
+    }
+
     async sendStartTimer(match: Match, counter: number): Promise<void> {
         setTimeout(() => {
             if (match.status == MatchStatus.STARTING) {
@@ -156,7 +175,7 @@ export class MatchGateway {
                     //     code: 'BET',
                     //     data: match,
                     // });
-                    // this.requestBets(match, 30);
+                    // this.requestBets(match, 30)
                 }
             } else {
             }

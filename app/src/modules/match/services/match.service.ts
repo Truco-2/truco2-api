@@ -121,6 +121,61 @@ export class MatchService {
         return match;
     }
 
+    async makePlay(
+        matchId: number,
+        card: number,
+        clientId: string,
+    ): Promise<Match> {
+        const client = this.clients.find(
+            (client) => client.clientId == clientId,
+        );
+
+        const match = this.matchs.find((match) => match.id == matchId);
+
+        if (!match) {
+            throw new Error('Match not found');
+        }
+
+        if (match.status != MatchStatus.REQUESTING_PLAYS) {
+            throw new Error('Match is not requesting plays');
+        }
+
+        const nextPlayer: Player | null = this.nextPlayerToPlay(match);
+
+        if (!nextPlayer) {
+            throw new Error('There is no player to play');
+        }
+
+        const player = match.players.find(
+            (player) => player.user.id == client.userId,
+        );
+
+        if (!player) {
+            throw new Error('Player not found');
+        }
+
+        if (player.id != nextPlayer.id) {
+            throw new Error('Not players turn');
+        }
+
+        if (!player.cards.includes(card)) {
+            throw new Error('Play invalide');
+        }
+
+        player.cards.splice(
+            player.cards.findIndex((c) => c == card),
+            1,
+        );
+
+        match.round.turn.plays.push({
+            playerId: player.id,
+            cardId: card,
+            id: 0,
+        });
+
+        return match;
+    }
+
     async makeBetBot(matchId: number, playerId: number): Promise<Match> {
         const match = this.matchs.find((match) => match.id == matchId);
 
