@@ -55,7 +55,6 @@ export class MatchGateway {
                 if (counter > 0) {
                     this.sendStartTimer(match, counter);
                 } else {
-                    this.matchService.verifyBetsRequest(match);
                     this.requestBets(match, 30);
                 }
             }
@@ -64,22 +63,27 @@ export class MatchGateway {
 
     async requestBets(match: Match, counter): Promise<void> {
         setTimeout(() => {
-            if (match.status == MatchStatus.REQUESTING_BETS) {
+            const playerId = this.matchService.verifyBetsRequest(match);
+
+            if (match.status == MatchStatus.REQUESTING_BETS && playerId > -1) {
                 this.server.to('match_' + match.id).emit('match-msg', {
                     code: 'REQUESTING-BETS',
                     data: {
+                        playerId: playerId,
+                        options: this.matchService.getBetOptions(
+                            match,
+                            playerId,
+                        ),
                         counter: counter,
                     },
                 });
 
                 counter--;
 
-                if (
-                    counter > 0 &&
-                    !this.matchService.verifyBetsRequest(match)
-                ) {
+                if (counter > 0) {
                     this.requestBets(match, counter);
                 }
+            } else {
             }
         }, 1000);
     }
