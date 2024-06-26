@@ -73,6 +73,40 @@ export class MatchService {
         return match;
     }
 
+    async makeBet(
+        matchId: number,
+        bet: number,
+        clientId: string,
+    ): Promise<Match> {
+        const client = this.clients.find(
+            (client) => client.clientId == clientId,
+        );
+
+        const match = this.matchs.find((match) => match.id == matchId);
+
+        if (!match) {
+            throw new Error('Match not found');
+        }
+
+        const player = match.players.find(
+            (player) => player.user.id == client.userId,
+        );
+
+        if (!player) {
+            throw new Error('Player not found');
+        }
+
+        const betOptions = this.getBetOptions(match, player.id);
+
+        if (!betOptions.includes(bet)) {
+            throw new Error('Bet invalide');
+        }
+
+        player.bet = bet;
+
+        return match;
+    }
+
     async create(roomCode: string): Promise<Match> {
         const room = await this.prisma.room.findFirst({
             where: {
@@ -215,19 +249,42 @@ export class MatchService {
     }
 
     getBetOptions(match: Match, playerId: number): number[] {
+        const turnsNumber = this.getTurnsNumber(match);
+
+        const options = [...Array(turnsNumber + 1).keys()];
+
         if (
             match.round.turn.playOrder[match.round.turn.playOrder.length - 1] ==
             playerId
         ) {
-            return [1];
-        } else {
-            return [...Array(this.getTurnsNumber(match) + 1).keys()];
+            const sumPlayersBets = this.getSumPlayerBets(match);
+
+            if (sumPlayersBets <= turnsNumber) {
+                options.splice(
+                    options.findIndex((o) => o == sumPlayersBets - turnsNumber),
+                    1,
+                );
+            }
         }
+
+        return options;
     }
 
     getTurnsNumber(match: Match): number {
         const cardNumbers: number[] = match.players.map((p) => p.cards.length);
         cardNumbers.sort();
         return cardNumbers.find((cardNumber) => cardNumber != 0);
+    }
+
+    getSumPlayerBets(match: Match): number {
+        let sumBets = 0;
+
+        match.players.forEach((player) => {
+            if (player.bet) {
+                sumBets += player.bet;
+            }
+        });
+
+        return sumBets;
     }
 }

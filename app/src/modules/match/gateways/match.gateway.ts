@@ -40,6 +40,25 @@ export class MatchGateway {
         });
     }
 
+    @SubscribeMessage('bet')
+    async handleBet(
+        @MessageBody() body: { matchId: number; bet: number },
+        @ConnectedSocket() client: Socket,
+    ): Promise<void> {
+        const match = await this.matchService.makeBet(
+            body.matchId,
+            body.bet,
+            client.id,
+        );
+
+        client.join('match_' + match.id);
+
+        this.server.to('match_' + match.id).emit('match-msg', {
+            code: 'PLAYER-STATUS',
+            data: match,
+        });
+    }
+
     async sendStartTimer(match: Match, counter: number): Promise<void> {
         setTimeout(() => {
             if (match.status == MatchStatus.STARTING) {
