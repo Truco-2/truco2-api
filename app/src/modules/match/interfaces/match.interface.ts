@@ -1,6 +1,5 @@
 import { MatchStatus } from 'src/common/enums/match.enum';
 import { Player } from './player.interface';
-import { Round } from './round.interface';
 
 export interface Match {
     id: number;
@@ -9,6 +8,7 @@ export interface Match {
     players: Player[];
     littleCorner: number | null;
     sky: number | null;
-    round: Round;
+    trumpCard: number | null;
+    playOrder: number[];
     unsedCards: number[];
 }

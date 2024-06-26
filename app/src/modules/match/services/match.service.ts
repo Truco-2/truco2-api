@@ -3,8 +3,6 @@ import {
     MatchStatus,
     PlayerStatus,
     PlayerType,
-    RoundStatus,
-    TurnStatus,
 } from 'src/common/enums/match.enum';
 import { Match } from '../interfaces/match.interface';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
@@ -167,11 +165,12 @@ export class MatchService {
             1,
         );
 
-        match.round.turn.plays.push({
-            playerId: player.id,
+        player.cardsOnHand = player.cards.length;
+
+        player.play = {
             cardId: card,
             id: 0,
-        });
+        };
 
         return match;
     }
@@ -248,11 +247,12 @@ export class MatchService {
             1,
         );
 
-        match.round.turn.plays.push({
-            playerId: player.id,
+        player.cardsOnHand = player.cards.length;
+
+        player.play = {
             cardId: card,
             id: 0,
-        });
+        };
 
         return match;
     }
@@ -288,15 +288,17 @@ export class MatchService {
             roomCode: roomCode,
             littleCorner: null,
             players: [],
-            round: null,
             sky: null,
             status: MatchStatus.STARTING,
             unsedCards: [...Array(40).keys()],
+            trumpCard: null,
+            playOrder: [],
         };
 
         room.usersRooms.forEach((user) => {
             match.players.push({
                 bet: null,
+                wins: 0,
                 cards: [],
                 cardsOnNextRound: 5,
                 cardsOnHand: 5,
@@ -308,6 +310,7 @@ export class MatchService {
                     id: user.userId,
                     name: user.user.name,
                 },
+                play: null,
             });
         });
 
@@ -323,23 +326,11 @@ export class MatchService {
     }
 
     startRound(match: Match): void {
-        match.round = {
-            id: 1,
-            losers: [],
-            status: RoundStatus.STARTED,
-            trumpCard: this.getCardFromDeck(match),
-            turn: null,
-        };
+        match.trumpCard = this.getCardFromDeck(match);
     }
 
     startTurn(match: Match): void {
-        match.round.turn = {
-            id: 1,
-            playOrder: this.getPlayerOrder(match.players),
-            plays: [],
-            status: TurnStatus.STARTED,
-            winner: null,
-        };
+        match.playOrder = this.getPlayerOrder(match.players);
     }
 
     getPlayerOrder(players: Player[], first: number | null = null): number[] {
@@ -409,9 +400,9 @@ export class MatchService {
     }
 
     nextPlayerToBet(match: Match): Player | null {
-        for (let i = 0; i < match.round.turn.playOrder.length; i++) {
+        for (let i = 0; i < match.playOrder.length; i++) {
             const player = match.players.find(
-                (p) => p.id == match.round.turn.playOrder[i],
+                (p) => p.id == match.playOrder[i],
             );
 
             if (player.type == PlayerType.USER && player.bet == null) {
@@ -423,16 +414,12 @@ export class MatchService {
     }
 
     nextPlayerToPlay(match: Match): Player | null {
-        for (let i = 0; i < match.round.turn.playOrder.length; i++) {
+        for (let i = 0; i < match.playOrder.length; i++) {
             const player = match.players.find(
-                (p) => p.id == match.round.turn.playOrder[i],
+                (p) => p.id == match.playOrder[i],
             );
 
-            const play = match.round.turn.plays.find(
-                (play) => play.playerId == player.id,
-            );
-
-            if (!play) {
+            if (!player.play) {
                 return player;
             }
         }
@@ -445,10 +432,7 @@ export class MatchService {
 
         const options = [...Array(turnsNumber + 1).keys()];
 
-        if (
-            match.round.turn.playOrder[match.round.turn.playOrder.length - 1] ==
-            playerId
-        ) {
+        if (match.playOrder[match.playOrder.length - 1] == playerId) {
             const sumPlayersBets = this.getSumPlayerBets(match);
 
             if (sumPlayersBets <= turnsNumber) {
