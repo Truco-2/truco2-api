@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MatchGateway } from './match.gateway';
-import { MatchModule } from '../../match.module';
+import { MatchModule } from '../match.module';
 
 describe('MatchGateway', () => {
     let gateway: MatchGateway;

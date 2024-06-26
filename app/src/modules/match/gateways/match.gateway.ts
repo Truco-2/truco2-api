@@ -3,7 +3,7 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { MatchService } from '../../services/match/match.service';
+import { MatchService } from '../services/match.service';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {

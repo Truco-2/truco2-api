@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { MatchService } from './services/match/match.service';
-import { MatchGateway } from './gateways/match/match.gateway';
+import { MatchGateway } from './gateways/match.gateway';
 import { PrismaModule } from 'src/providers/prisma/prima.module';
+import { MatchService } from './services/match.service';
 
 @Module({
     controllers: [],
