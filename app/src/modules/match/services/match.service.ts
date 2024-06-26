@@ -507,24 +507,32 @@ export class MatchService {
         if (match.turnsLeft <= 0) {
             this.calculateRoundLosers(match);
 
-            match.turn = 1;
+            match.turn = 0;
             match.round++;
 
             this.startRound(match);
 
             this.sortCards(match);
-        }
 
-        match.players.forEach((p) => (p.play = null));
+            match.turn++;
 
-        match.status = MatchStatus.REQUESTING_PLAYS;
+            match.players.forEach((p) => (p.play = null));
 
-        match.playOrder = this.getPlayerOrder(match.players, winner.id);
+            match.playOrder = this.getPlayerOrder(match.players);
 
-        if (match.playOrder.length > 1) {
-            match.status = MatchStatus.REQUESTING_PLAYS;
+            match.status = MatchStatus.REQUESTING_BETS;
         } else {
-            match.status = MatchStatus.FINISHED;
+            match.turn++;
+
+            match.players.forEach((p) => (p.play = null));
+
+            match.playOrder = this.getPlayerOrder(match.players, winner.id);
+
+            if (match.playOrder.length > 1) {
+                match.status = MatchStatus.REQUESTING_PLAYS;
+            } else {
+                match.status = MatchStatus.FINISHED;
+            }
         }
     }
 
