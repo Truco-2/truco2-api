@@ -36,10 +36,10 @@ export class MatchService {
         return this.matchs;
     }
 
-    async create(roomId: number): Promise<Match> {
+    async create(roomCode: string): Promise<Match> {
         const room = await this.prisma.room.findFirst({
             where: {
-                id: roomId,
+                code: roomCode,
             },
             include: {
                 usersRooms: {
