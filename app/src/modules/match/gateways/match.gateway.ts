@@ -170,12 +170,14 @@ export class MatchGateway {
                 if (counter > 0) {
                     this.requestPlays(match, counter, playerId);
                 } else {
-                    // this.matchService.makeBetBot(match.id, playerId);
-                    // this.server.to('match_' + match.id).emit('match-msg', {
-                    //     code: 'BET',
-                    //     data: match,
-                    // });
-                    // this.requestBets(match, 30)
+                    this.matchService.makePlayBot(match.id, playerId);
+
+                    this.server.to('match_' + match.id).emit('match-msg', {
+                        code: 'PLAY',
+                        data: match,
+                    });
+
+                    this.requestPlays(match, 30);
                 }
             } else {
             }
