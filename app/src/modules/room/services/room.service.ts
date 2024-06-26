@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { faker, ro_MD } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { RoomDto } from '../dtos/room.dto';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
 import { plainToInstance } from 'class-transformer';
-import { RoomStatus } from '@prisma/client';
 import { RoomCodeDto } from '../dtos/room-code.dto';
+import { RoomStatus } from 'src/common/enums/room-status.enum';
 
 @Injectable()
 export class RoomService {
