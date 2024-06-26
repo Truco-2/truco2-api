@@ -189,6 +189,8 @@ export class MatchGateway {
 
                 if (match.status == MatchStatus.REQUESTING_PLAYS) {
                     this.requestPlays(match, this.defaultCounter);
+                } else if (match.status == MatchStatus.REQUESTING_BETS) {
+                    this.requestBets(match, this.defaultCounter);
                 }
             }
         }, 1000);
