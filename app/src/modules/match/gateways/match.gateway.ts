@@ -119,6 +119,46 @@ export class MatchGateway {
 
                     this.requestBets(match, 30);
                 }
+            } else {
+                this.requestPlays(match, 30);
+            }
+        }, 1000);
+    }
+
+    async requestPlays(
+        match: Match,
+        counter: number,
+        latsId: number = -10,
+    ): Promise<void> {
+        setTimeout(() => {
+            const playerId = this.matchService.verifyPlaysRequest(match);
+
+            if (playerId != latsId) {
+                counter = 30;
+            }
+
+            if (match.status == MatchStatus.REQUESTING_PLAYS && playerId > -1) {
+                this.server.to('match_' + match.id).emit('match-msg', {
+                    code: 'REQUESTING-PLAYS',
+                    data: {
+                        playerId: playerId,
+                        counter: counter,
+                    },
+                });
+
+                counter--;
+
+                if (counter > 0) {
+                    this.requestPlays(match, counter, playerId);
+                } else {
+                    // this.matchService.makeBetBot(match.id, playerId);
+                    // this.server.to('match_' + match.id).emit('match-msg', {
+                    //     code: 'BET',
+                    //     data: match,
+                    // });
+                    // this.requestBets(match, 30);
+                }
+            } else {
             }
         }, 1000);
     }
