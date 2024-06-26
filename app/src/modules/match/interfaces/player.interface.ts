@@ -10,5 +10,5 @@ export interface Player {
     cardsOnNextRound: number;
     cardsOnHand: number;
     cards: number[];
-    socketClientId: number | null;
+    socketClientId: string | null;
 }

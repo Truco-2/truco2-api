@@ -12,6 +12,11 @@ import { Player } from '../interfaces/player.interface';
 
 @Injectable()
 export class MatchService {
+    clients: {
+        userId: number;
+        clientId: string;
+    }[] = [];
+
     matchs: Match[] = [];
 
     constructor(private prisma: PrismaService) {}
@@ -34,6 +39,38 @@ export class MatchService {
 
     async list(): Promise<Match[]> {
         return this.matchs;
+    }
+
+    async enter(
+        matchId: number,
+        userId: number,
+        clientId: string,
+    ): Promise<Match> {
+        const client = this.clients.find((client) => client.userId == userId);
+
+        if (!client) {
+            this.clients.push({
+                clientId: clientId,
+                userId: userId,
+            });
+        }
+
+        const match = this.matchs.find((match) => match.id == matchId);
+
+        if (!match) {
+            throw new Error('Match not found');
+        }
+
+        const player = match.players.find((player) => player.user.id == userId);
+
+        if (!player) {
+            throw new Error('Player not found');
+        }
+
+        player.socketClientId = clientId;
+        player.status = PlayerStatus.ONLINE;
+
+        return match;
     }
 
     async create(roomCode: string): Promise<Match> {
@@ -87,7 +124,7 @@ export class MatchService {
 
         this.sortCards(match);
 
-        // this.matchs.push(match);
+        this.matchs.push(match);
 
         return match;
     }
