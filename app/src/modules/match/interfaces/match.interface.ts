@@ -9,4 +9,5 @@ export interface Match {
     littleCorner: number | null;
     sky: number | null;
     round: Round;
+    unsedCards: number[];
 }
