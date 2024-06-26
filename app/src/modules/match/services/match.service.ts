@@ -188,7 +188,7 @@ export class MatchService {
         });
     }
 
-    verifyBetsRequest(match: Match): boolean {
+    verifyBetsRequest(match: Match): number {
         match.status = MatchStatus.REQUESTING_BETS;
 
         if (
@@ -199,15 +199,35 @@ export class MatchService {
             this.sortCards(match);
         }
 
-        if (
-            match.players.find(
-                (player) =>
-                    player.type == PlayerType.USER && player.bet == null,
-            )
-        ) {
-            return false;
+        for (let i = 0; i < match.round.turn.playOrder.length; i++) {
+            const player = match.players.find(
+                (p) => p.id == match.round.turn.playOrder[i],
+            );
+
+            if (player.type == PlayerType.USER && player.bet == null) {
+                return player.id;
+            }
         }
 
-        return true;
+        match.status = MatchStatus.FINISHED;
+
+        return -1;
+    }
+
+    getBetOptions(match: Match, playerId: number): number[] {
+        if (
+            match.round.turn.playOrder[match.round.turn.playOrder.length - 1] ==
+            playerId
+        ) {
+            return [1];
+        } else {
+            return [...Array(this.getTurnsNumber(match) + 1).keys()];
+        }
+    }
+
+    getTurnsNumber(match: Match): number {
+        const cardNumbers: number[] = match.players.map((p) => p.cards.length);
+        cardNumbers.sort();
+        return cardNumbers.find((cardNumber) => cardNumber != 0);
     }
 }
