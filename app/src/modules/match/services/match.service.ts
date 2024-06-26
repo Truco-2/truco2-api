@@ -88,12 +88,26 @@ export class MatchService {
             throw new Error('Match not found');
         }
 
+        if (match.status != MatchStatus.REQUESTING_BETS) {
+            throw new Error('Match is not requesting bet');
+        }
+
+        const nextPlayer: Player | null = this.nextPlayerToBet(match);
+
+        if (!nextPlayer) {
+            throw new Error('There is no player to bet');
+        }
+
         const player = match.players.find(
             (player) => player.user.id == client.userId,
         );
 
         if (!player) {
             throw new Error('Player not found');
+        }
+
+        if (player.id != nextPlayer.id) {
+            throw new Error('Not players turn');
         }
 
         const betOptions = this.getBetOptions(match, player.id);
@@ -103,6 +117,41 @@ export class MatchService {
         }
 
         player.bet = bet;
+
+        return match;
+    }
+
+    async makeBetBot(matchId: number, playerId: number): Promise<Match> {
+        const match = this.matchs.find((match) => match.id == matchId);
+
+        if (!match) {
+            throw new Error('Match not found');
+        }
+
+        if (match.status != MatchStatus.REQUESTING_BETS) {
+            throw new Error('Match is not requesting bet');
+        }
+
+        const nextPlayer: Player | null = this.nextPlayerToBet(match);
+
+        if (!nextPlayer) {
+            throw new Error('There is no player to bet');
+        }
+
+        const player = match.players.find((player) => player.id == playerId);
+
+        if (!player) {
+            throw new Error('Player not found');
+        }
+
+        if (player.id != nextPlayer.id) {
+            throw new Error('Not players turn');
+        }
+
+        const betOptions = this.getBetOptions(match, player.id);
+
+        player.bet =
+            betOptions[this.randomIntFromInterval(0, betOptions.length - 1)];
 
         return match;
     }
@@ -233,19 +282,29 @@ export class MatchService {
             this.sortCards(match);
         }
 
+        const nextPlayer: Player | null = this.nextPlayerToBet(match);
+
+        if (nextPlayer) {
+            return nextPlayer.id;
+        }
+
+        match.status = MatchStatus.FINISHED;
+
+        return -1;
+    }
+
+    nextPlayerToBet(match): Player | null {
         for (let i = 0; i < match.round.turn.playOrder.length; i++) {
             const player = match.players.find(
                 (p) => p.id == match.round.turn.playOrder[i],
             );
 
             if (player.type == PlayerType.USER && player.bet == null) {
-                return player.id;
+                return player;
             }
         }
 
-        match.status = MatchStatus.FINISHED;
-
-        return -1;
+        return null;
     }
 
     getBetOptions(match: Match, playerId: number): number[] {
@@ -261,7 +320,7 @@ export class MatchService {
 
             if (sumPlayersBets <= turnsNumber) {
                 options.splice(
-                    options.findIndex((o) => o == sumPlayersBets - turnsNumber),
+                    options.findIndex((o) => o == turnsNumber - sumPlayersBets),
                     1,
                 );
             }
