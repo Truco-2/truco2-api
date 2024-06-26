@@ -91,8 +91,17 @@ export class MatchService {
             throw new Error('room not found');
         }
 
+        const matchExist = this.matchs.find(
+            (match) => match.roomCode == roomCode,
+        );
+
+        if (matchExist) {
+            return matchExist;
+        }
+
         const match: Match = {
             id: this.matchs.length + 1,
+            roomCode: roomCode,
             littleCorner: null,
             players: [],
             round: null,
