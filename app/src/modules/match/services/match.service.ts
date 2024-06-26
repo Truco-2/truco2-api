@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Match } from '../../interfaces/match.interface';
 import {
     MatchStatus,
     PlayerStatus,
@@ -7,6 +6,7 @@ import {
     RoundStatus,
     TurnStatus,
 } from 'src/common/enums/match.enum';
+import { Match } from '../interfaces/match.interface';
 
 @Injectable()
 export class MatchService {
