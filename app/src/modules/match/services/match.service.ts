@@ -8,6 +8,7 @@ import {
 } from 'src/common/enums/match.enum';
 import { Match } from '../interfaces/match.interface';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
+import { Player } from '../interfaces/player.interface';
 
 @Injectable()
 export class MatchService {
@@ -15,6 +16,8 @@ export class MatchService {
         {
             id: 1,
             littleCorner: null,
+            sky: 1,
+            status: MatchStatus.STARTED,
             players: [
                 {
                     id: 1,
@@ -49,12 +52,14 @@ export class MatchService {
                     winner: 1,
                 },
             },
-            sky: 1,
-            status: MatchStatus.STARTED,
         },
     ];
 
     constructor(private prisma: PrismaService) {}
+
+    randomIntFromInterval(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
 
     async list(): Promise<Match[]> {
         return this.matchs;
@@ -103,8 +108,51 @@ export class MatchService {
             });
         });
 
-        this.matchs.push(match);
+        this.startRound(match);
+
+        this.startTurn(match);
+
+        // this.matchs.push(match);
 
         return match;
+    }
+
+    startRound(match: Match): void {
+        match.round = {
+            id: 1,
+            losers: [],
+            status: RoundStatus.STARTED,
+            trumpCard: this.randomIntFromInterval(0, 39),
+            turn: null,
+        };
+    }
+
+    startTurn(match: Match): void {
+        match.round.turn = {
+            id: 1,
+            playOrder: this.getPlayerOrder(match.players),
+            plays: [],
+            status: TurnStatus.STARTED,
+            winner: null,
+        };
+    }
+
+    getPlayerOrder(players: Player[], first: number | null = null): number[] {
+        const order = players.map((player) => player.id);
+
+        if (first) {
+            const firstIndex = order.findIndex((id) => id == first);
+
+            if (firstIndex < 0) {
+                throw new Error('error on sorting players');
+            }
+
+            for (let i = 0; i < firstIndex; i++) {
+                order.push(order[0]);
+                order.shift();
+            }
+        }
+
+        return order;
     }
 }
