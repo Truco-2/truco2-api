@@ -18,6 +18,7 @@ export class MatchService {
             littleCorner: null,
             sky: 1,
             status: MatchStatus.STARTED,
+            unsedCards: [],
             players: [
                 {
                     id: 1,
@@ -57,8 +58,20 @@ export class MatchService {
 
     constructor(private prisma: PrismaService) {}
 
-    randomIntFromInterval(min, max) {
+    randomIntFromInterval(min: number, max: number): number {
         return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    getCardFromDeck(match: Match): number {
+        const cardIndex = this.randomIntFromInterval(
+            0,
+            match.unsedCards.length - 1,
+        );
+        const card: number = match.unsedCards[cardIndex];
+
+        match.unsedCards.splice(cardIndex, 1);
+
+        return card;
     }
 
     async list(): Promise<Match[]> {
@@ -90,6 +103,7 @@ export class MatchService {
             round: null,
             sky: null,
             status: MatchStatus.STARTED,
+            unsedCards: [...Array(40).keys()],
         };
 
         room.usersRooms.forEach((user) => {
@@ -112,6 +126,8 @@ export class MatchService {
 
         this.startTurn(match);
 
+        this.sortCards(match);
+
         // this.matchs.push(match);
 
         return match;
@@ -122,7 +138,7 @@ export class MatchService {
             id: 1,
             losers: [],
             status: RoundStatus.STARTED,
-            trumpCard: this.randomIntFromInterval(0, 39),
+            trumpCard: this.getCardFromDeck(match),
             turn: null,
         };
     }
@@ -154,5 +170,15 @@ export class MatchService {
         }
 
         return order;
+    }
+
+    sortCards(match: Match): void {
+        match.players.forEach((player) => {
+            player.cards = [];
+
+            for (let i = 0; i < player.cardsOnNextRound; i++) {
+                player.cards.push(this.getCardFromDeck(match));
+            }
+        });
     }
 }
