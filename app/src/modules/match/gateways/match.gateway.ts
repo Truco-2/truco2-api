@@ -13,6 +13,7 @@ import { MatchStatus } from 'src/common/enums/match.enum';
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
     @WebSocketServer() server;
+    defaultCounter = 3;
 
     constructor(private matchService: MatchService) {}
 
@@ -93,7 +94,7 @@ export class MatchGateway {
                 if (counter > 0) {
                     this.sendStartTimer(match, counter);
                 } else {
-                    this.requestBets(match, 30);
+                    this.requestBets(match, this.defaultCounter);
                 }
             }
         }, 1000);
@@ -108,7 +109,7 @@ export class MatchGateway {
             const playerId = this.matchService.verifyBetsRequest(match);
 
             if (playerId != latsId) {
-                counter = 30;
+                counter = this.defaultCounter;
             }
 
             if (match.status == MatchStatus.REQUESTING_BETS && playerId > -1) {
@@ -136,10 +137,10 @@ export class MatchGateway {
                         data: match,
                     });
 
-                    this.requestBets(match, 30);
+                    this.requestBets(match, this.defaultCounter);
                 }
             } else {
-                this.requestPlays(match, 30);
+                this.requestPlays(match, this.defaultCounter);
             }
         }, 1000);
     }
@@ -150,10 +151,12 @@ export class MatchGateway {
         latsId: number = -10,
     ): Promise<void> {
         setTimeout(() => {
+            console.log(match);
+
             const playerId = this.matchService.verifyPlaysRequest(match);
 
             if (playerId != latsId) {
-                counter = 30;
+                counter = this.defaultCounter;
             }
 
             if (match.status == MatchStatus.REQUESTING_PLAYS && playerId > -1) {
@@ -177,9 +180,16 @@ export class MatchGateway {
                         data: match,
                     });
 
-                    this.requestPlays(match, 30);
+                    this.requestPlays(match, this.defaultCounter);
                 }
             } else {
+                const winner = this.matchService.calculateTurnWinner(match);
+
+                this.matchService.startNextTurn(match, winner);
+
+                if (match.status == MatchStatus.REQUESTING_PLAYS) {
+                    this.requestPlays(match, this.defaultCounter);
+                }
             }
         }, 1000);
     }

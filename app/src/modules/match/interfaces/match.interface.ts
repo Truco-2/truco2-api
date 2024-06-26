@@ -8,7 +8,10 @@ export interface Match {
     players: Player[];
     littleCorner: number | null;
     sky: number | null;
-    trumpCard: number | null;
+    tableCard: number | null;
     playOrder: number[];
     unsedCards: number[];
+    turn: number;
+    turnsLeft: number;
+    round: number;
 }
