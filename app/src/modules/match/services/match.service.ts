@@ -288,18 +288,50 @@ export class MatchService {
             return nextPlayer.id;
         }
 
+        match.status = MatchStatus.REQUESTING_PLAYS;
+
+        return -1;
+    }
+
+    verifyPlaysRequest(match: Match): number {
+        match.status = MatchStatus.REQUESTING_PLAYS;
+
+        const nextPlayer: Player | null = this.nextPlayerToPlay(match);
+
+        if (nextPlayer) {
+            return nextPlayer.id;
+        }
+
         match.status = MatchStatus.FINISHED;
 
         return -1;
     }
 
-    nextPlayerToBet(match): Player | null {
+    nextPlayerToBet(match: Match): Player | null {
         for (let i = 0; i < match.round.turn.playOrder.length; i++) {
             const player = match.players.find(
                 (p) => p.id == match.round.turn.playOrder[i],
             );
 
             if (player.type == PlayerType.USER && player.bet == null) {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    nextPlayerToPlay(match: Match): Player | null {
+        for (let i = 0; i < match.round.turn.playOrder.length; i++) {
+            const player = match.players.find(
+                (p) => p.id == match.round.turn.playOrder[i],
+            );
+
+            const play = match.round.turn.plays.find(
+                (play) => play.playerId == player.id,
+            );
+
+            if (!play) {
                 return player;
             }
         }
