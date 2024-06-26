@@ -7,6 +7,7 @@ import {
     TurnStatus,
 } from 'src/common/enums/match.enum';
 import { Match } from '../interfaces/match.interface';
+import { PrismaService } from 'src/providers/prisma/prisma.service';
 
 @Injectable()
 export class MatchService {
@@ -53,7 +54,57 @@ export class MatchService {
         },
     ];
 
+    constructor(private prisma: PrismaService) {}
+
     async list(): Promise<Match[]> {
         return this.matchs;
+    }
+
+    async create(roomId: number): Promise<Match> {
+        const room = await this.prisma.room.findFirst({
+            where: {
+                id: roomId,
+            },
+            include: {
+                usersRooms: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+        });
+
+        if (!room) {
+            throw new Error('room not found');
+        }
+
+        const match: Match = {
+            id: this.matchs.length + 1,
+            littleCorner: null,
+            players: [],
+            round: null,
+            sky: null,
+            status: MatchStatus.STARTED,
+        };
+
+        room.usersRooms.forEach((user) => {
+            match.players.push({
+                bet: null,
+                cards: [],
+                cardsOnNextRound: 5,
+                id: user.userId,
+                socketClientId: null,
+                status: PlayerStatus.OFFLINE,
+                type: PlayerType.USER,
+                user: {
+                    id: user.userId,
+                    name: user.user.name,
+                },
+            });
+        });
+
+        this.matchs.push(match);
+
+        return match;
     }
 }
