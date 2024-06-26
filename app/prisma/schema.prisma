@@ -29,30 +29,10 @@ model Room {
   isPrivate  Boolean      @default(false) @map("is_private")
   maxPlayers Int          @default(2) @map("max_players")
   password   String?
-  status     RoomStatus
+  status     Int          @default(1)
   usersRooms UsersRooms[]
 
   @@map("rooms")
-}
-
-model Card {
-  id          Int    @id @default(autoincrement())
-  value       Int    @unique
-  name        String
-  description String
-  suit        Suit
-  Play        Play[]
-
-  @@map("card")
-}
-
-model Play {
-  id     Int  @id @default(autoincrement())
-  userId Int  @map("user_id")
-  cardId Int  @map("card_id")
-  card   Card @relation(fields: [cardId], references: [id])
-
-  @@map("play")
 }
 
 model UsersRooms {
@@ -63,21 +43,4 @@ model UsersRooms {
 
   @@id([userId, roomId])
   @@map("users_rooms")
-}
-
-enum Suit {
-  CLUBS
-  HEARTS
-  SPADES
-  DIAMONDS
-
-  @@map("suit")
-}
-
-enum RoomStatus {
-  WAITING
-  STARTED
-  FINISHED
-
-  @@map("room_status")
 }
