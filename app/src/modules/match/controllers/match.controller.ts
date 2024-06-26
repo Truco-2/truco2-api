@@ -14,6 +14,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { FormatResponseInterceptor } from 'src/common/interceptors/format-response/format-response.interceptor';
 import { RoomGateway } from 'src/modules/room/gateways/room.gateway';
 import { RoomService } from 'src/modules/room/services/room.service';
+import { MatchGateway } from '../gateways/match.gateway';
 import { RoomStatus } from 'src/common/enums/room-status.enum';
 
 @ApiBearerAuth()
@@ -22,6 +23,7 @@ import { RoomStatus } from 'src/common/enums/room-status.enum';
 export class MatchController {
     constructor(
         private readonly matchService: MatchService,
+        private readonly matchGateway: MatchGateway,
         private readonly roomGateway: RoomGateway,
         private readonly roomService: RoomService,
     ) {}
@@ -41,6 +43,8 @@ export class MatchController {
         );
 
         this.roomGateway.updateAvailableList(room);
+
+        this.matchGateway.sendStartTimer(match, 10);
 
         return match;
     }

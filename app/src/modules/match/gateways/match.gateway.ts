@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { MatchService } from '../services/match.service';
 import { Socket } from 'socket.io';
+import { Match } from '../interfaces/match.interface';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
@@ -36,5 +37,22 @@ export class MatchGateway {
             code: 'PLAYER-STATUS',
             data: match,
         });
+    }
+
+    async sendStartTimer(match: Match, counter: number): Promise<void> {
+        setTimeout(() => {
+            this.server.to('match_' + match.id).emit('match-msg', {
+                code: 'START-TIMER',
+                data: {
+                    counter: counter,
+                },
+            });
+
+            counter--;
+
+            if (counter > 0) {
+                this.sendStartTimer(match, counter);
+            }
+        }, 1000);
     }
 }
