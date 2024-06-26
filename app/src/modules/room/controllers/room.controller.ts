@@ -45,9 +45,7 @@ export class RoomController {
     ): Promise<RoomDto> {
         const room = await this.roomService.create(user.userId, data);
 
-        if (!room.isPrivate) {
-            this.roomGateway.updateAvailableList(room);
-        }
+        this.roomGateway.updateAvailableList(room);
 
         return room;
     }
@@ -61,9 +59,7 @@ export class RoomController {
     ): Promise<RoomDto> {
         const room = await this.roomService.enter(resource, user.userId);
 
-        if (!room.isPrivate) {
-            this.roomGateway.updateAvailableList(room);
-        }
+        this.roomGateway.updateAvailableList(room);
 
         return room;
     }
@@ -80,7 +76,10 @@ export class RoomController {
     @UseFilters(HttpExceptionFilter)
     @Post('/exit')
     async exit(@GetUser() user): Promise<boolean> {
-        // TO DO: Adicionar chamada websocket para avisar ao novo dono da sala
-        return await this.roomService.exit(user.userId);
+        const room = await this.roomService.exit(user.userId);
+
+        this.roomGateway.updateAvailableList(room);
+
+        return true;
     }
 }

@@ -168,7 +168,7 @@ export class RoomService {
         }
     }
 
-    async exit(userId: number): Promise<boolean> {
+    async exit(userId: number): Promise<RoomDto> {
         const room = await this.prisma.room.findFirst({
             where: {
                 AND: [
@@ -219,6 +219,20 @@ export class RoomService {
             });
         }
 
-        return true;
+        const finalRoom = this.prisma.room.findFirst({
+            where: {
+                AND: [
+                    { NOT: { status: RoomStatus.FINISHED } },
+                    { usersRooms: { some: { userId: userId } } },
+                ],
+            },
+            include: {
+                usersRooms: true,
+            },
+        });
+
+        return plainToInstance(RoomDto, finalRoom, {
+            excludeExtraneousValues: true,
+        });
     }
 }

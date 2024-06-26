@@ -18,6 +18,9 @@ export class RoomGateway {
     availableRoomsListAllMsg = 'available-rooms-list-all-msg';
     availableRoomsListMsg = 'available-rooms-list-msg';
 
+    roomKey = 'room-';
+    roomUpdateKey = 'room-update';
+
     constructor(private roomService: RoomService) {}
 
     @WebSocketServer() server;
@@ -47,9 +50,25 @@ export class RoomGateway {
         }
     }
 
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
+    @SubscribeMessage('enter-room')
+    async handleEnterRoom(
+        @MessageBody() code: string,
+        @ConnectedSocket() client: Socket,
+    ): Promise<void> {
+        client.join(this.roomKey + code);
+
+        const room = await this.roomService.find(code);
+
+        this.server.to(this.roomKey + code).emit(this.roomUpdateKey, room);
+    }
+
     updateAvailableList(room: RoomDto): void {
         this.server
             .to(this.availableRoomsListKey)
             .emit(this.availableRoomsListMsg, room);
+
+        this.server.to(this.roomKey + room.code).emit(this.roomUpdateKey, room);
     }
 }
