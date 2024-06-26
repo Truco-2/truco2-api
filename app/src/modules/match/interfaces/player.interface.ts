@@ -8,6 +8,7 @@ export interface Player {
     type: PlayerType;
     bet: number | null;
     cardsOnNextRound: number;
+    cardsOnHand: number;
     cards: number[];
     socketClientId: number | null;
 }

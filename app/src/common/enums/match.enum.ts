@@ -10,7 +10,8 @@ export enum PlayerStatus {
 
 export enum RoundStatus {
     STARTED = 1,
-    FINISHED = 2,
+    REQUESTING_BETS = 2,
+    FINISHED = 3,
 }
 
 export enum TurnStatus {
