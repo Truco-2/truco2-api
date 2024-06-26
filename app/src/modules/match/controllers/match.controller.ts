@@ -12,12 +12,19 @@ import { HttpExceptionFilter } from 'src/common/filters/http-exception/http-exce
 import { CreateMatchDto } from '../dtos/create-match.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { FormatResponseInterceptor } from 'src/common/interceptors/format-response/format-response.interceptor';
+import { RoomGateway } from 'src/modules/room/gateways/room.gateway';
+import { RoomService } from 'src/modules/room/services/room.service';
+import { RoomStatus } from 'src/common/enums/room-status.enum';
 
 @ApiBearerAuth()
 @UseInterceptors(FormatResponseInterceptor)
 @Controller('match')
 export class MatchController {
-    constructor(private readonly matchService: MatchService) {}
+    constructor(
+        private readonly matchService: MatchService,
+        private readonly roomGateway: RoomGateway,
+        private readonly roomService: RoomService,
+    ) {}
 
     @UseGuards(JwtAuthGuard)
     @UseFilters(HttpExceptionFilter)
@@ -27,6 +34,13 @@ export class MatchController {
         data: CreateMatchDto,
     ): Promise<any> {
         const match = await this.matchService.create(data.roomCode);
+
+        const room = await this.roomService.updateStatus(
+            data.roomCode,
+            RoomStatus.STARTED,
+        );
+
+        this.roomGateway.updateAvailableList(room);
 
         return match;
     }
