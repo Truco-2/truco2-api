@@ -26,7 +26,7 @@ export class MatchController {
         @Body()
         data: CreateMatchDto,
     ): Promise<any> {
-        const match = await this.matchService.create(data.roomId);
+        const match = await this.matchService.create(data.roomCode);
 
         return match;
     }
