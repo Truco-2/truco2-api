@@ -11,6 +11,7 @@ import { RoomService } from '../services/room.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
 import { RoomDto } from '../dtos/room.dto';
+import { Match } from 'src/modules/match/interfaces/match.interface';
 
 @WebSocketGateway({ namespace: 'room', cors: true })
 export class RoomGateway {
@@ -68,6 +69,14 @@ export class RoomGateway {
         this.server
             .to(this.availableRoomsListKey)
             .emit(this.availableRoomsListMsg, room);
+
+        this.server.to(this.roomKey + room.code).emit(this.roomUpdateKey, room);
+    }
+
+    startMatch(room: RoomDto, match: Match): void {
+        this.server
+            .to(this.roomKey + room.code)
+            .emit('match-start', { id: match.id });
 
         this.server.to(this.roomKey + room.code).emit(this.roomUpdateKey, room);
     }

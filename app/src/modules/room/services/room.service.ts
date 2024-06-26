@@ -78,6 +78,33 @@ export class RoomService {
         });
     }
 
+    async updateStatus(
+        code: string,
+        status: RoomStatus,
+    ): Promise<RoomDto | null> {
+        const room = await this.prisma.room.update({
+            where: { code: code },
+            data: {
+                status: status,
+            },
+            include: {
+                usersRooms: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+        });
+
+        if (room === null) {
+            throw new Error('Could not find room with code :' + code);
+        }
+
+        return plainToInstance(RoomDto, room, {
+            excludeExtraneousValues: true,
+        });
+    }
+
     async enter(
         resource: RoomCodeDto,
         userId: number,
