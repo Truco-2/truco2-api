@@ -7,7 +7,7 @@ describe('MatchGateway', () => {
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [MatchModule],
+            imports: [MatchModule],
         }).compile();
 
         gateway = module.get<MatchGateway>(MatchGateway);
