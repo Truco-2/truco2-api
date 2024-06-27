@@ -17,6 +17,7 @@ export enum MatchServerMessage {
     TURN_END = 'TURN_END',
     ROUND_END = 'ROUND_END',
     MATCH_END = 'MATCH_END',
+    PLAYER_STATUS = 'PLAYER_STATUS',
 }
 
 export enum PlayerStatus {

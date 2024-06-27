@@ -172,7 +172,7 @@ export class MatchService {
         return match;
     }
 
-    async makeBetBot(matchId: number, playerId: number): Promise<Match> {
+    async makeBetBot(matchId: number, playerId: number): Promise<number> {
         const match = this.matchs.find((match) => match.id == matchId);
 
         if (!match) {
@@ -204,10 +204,10 @@ export class MatchService {
         player.bet =
             betOptions[this.randomIntFromInterval(0, betOptions.length - 1)];
 
-        return match;
+        return player.bet;
     }
 
-    async makePlayBot(matchId: number, playerId: number): Promise<Match> {
+    async makePlayBot(matchId: number, playerId: number): Promise<number> {
         const match = this.matchs.find((match) => match.id == matchId);
 
         if (!match) {
@@ -251,7 +251,7 @@ export class MatchService {
             id: 0,
         };
 
-        return match;
+        return player.play.cardId;
     }
 
     async create(roomCode: string): Promise<Match> {
@@ -585,5 +585,9 @@ export class MatchService {
         });
 
         return result;
+    }
+
+    getPlayerIdByClientId(clientId: string): number {
+        return this.clients.find((c) => c.clientId == clientId).userId;
     }
 }
