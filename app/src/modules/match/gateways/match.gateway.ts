@@ -8,13 +8,17 @@ import {
 import { MatchService } from '../services/match.service';
 import { Socket } from 'socket.io';
 import { Match } from '../interfaces/match.interface';
-import { MatchServerMessage, MatchStatus } from 'src/common/enums/match.enum';
+import {
+    MatchServerMessage,
+    MatchStatus,
+    PlayerStatus,
+} from 'src/common/enums/match.enum';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
     @WebSocketServer() server;
     msgKey = 'match-msg';
-    defaultCounter = 3;
+    defaultCounter = 1;
 
     constructor(private matchService: MatchService) {}
 
@@ -31,7 +35,11 @@ export class MatchGateway {
 
         client.join('match_' + match.id);
 
-        this.sendPlayerStatus(match);
+        this.sendPlayerStatus(
+            match,
+            this.matchService.getPlayerIdByClientId(client.id),
+            PlayerStatus.ONLINE,
+        );
     }
 
     @SubscribeMessage('bet')
@@ -91,6 +99,9 @@ export class MatchGateway {
                         match,
                         MatchStatus.REQUESTING_BETS,
                     );
+
+                    this.sendRoundStart(match);
+
                     this.requestBets(match, this.defaultCounter);
                 }
             }
@@ -131,6 +142,9 @@ export class MatchGateway {
                     match,
                     MatchStatus.REQUESTING_PLAYS,
                 );
+
+                this.sendTurnStart(match);
+
                 this.requestPlays(match, this.defaultCounter);
             }
         }, 1000);
@@ -173,12 +187,31 @@ export class MatchGateway {
 
                 const winner = this.matchService.calculateTurnWinner(match);
 
+                const losers = this.matchService.calculateRoundLosers(match);
+
                 const status = this.matchService.startNextTurn(match, winner);
 
+                this.sendTurnEnd(match, winner.id);
+
                 if (status == MatchStatus.REQUESTING_PLAYS) {
+                    this.sendTurnStart(match);
                     this.requestPlays(match, this.defaultCounter);
                 } else if (status == MatchStatus.REQUESTING_BETS) {
+                    this.sendRoundEnd(
+                        match,
+                        losers.map((l) => l.id),
+                    );
+
+                    this.sendRoundStart(match);
+
                     this.requestBets(match, this.defaultCounter);
+                } else {
+                    this.sendRoundEnd(
+                        match,
+                        losers.map((l) => l.id),
+                    );
+
+                    this.sendMatchEnd(match);
                 }
             }
         }, 1000);
@@ -219,16 +252,12 @@ export class MatchGateway {
     }
 
     async sendBet(match: Match, playerId: number, bet: number) {
-        const resources = this.matchService.getMatchResources(match);
-
-        resources.forEach((r) => {
-            this.server.to(r.clientId).emit(this.msgKey, {
-                code: MatchServerMessage.BET,
-                data: {
-                    playerId: playerId,
-                    bet: bet,
-                },
-            });
+        this.server.to('match_' + match.id).emit(this.msgKey, {
+            code: MatchServerMessage.BET,
+            data: {
+                playerId: playerId,
+                bet: bet,
+            },
         });
     }
 
@@ -257,44 +286,30 @@ export class MatchGateway {
     }
 
     async sendPlay(match: Match, playerId: number, card: number) {
-        const resources = this.matchService.getMatchResources(match);
-
-        resources.forEach((r) => {
-            this.server.to(r.clientId).emit(this.msgKey, {
-                code: MatchServerMessage.PLAY,
-                data: {
-                    playerId: playerId,
-                    card: card,
-                },
-            });
+        this.server.to('match_' + match.id).emit(this.msgKey, {
+            code: MatchServerMessage.PLAY,
+            data: {
+                playerId: playerId,
+                card: card,
+            },
         });
     }
 
-    async sendTurnEnd(match: Match) {
-        const resources = this.matchService.getMatchResources(match);
-
-        resources.forEach((r) => {
-            this.server.to(r.clientId).emit(this.msgKey, {
-                code: MatchServerMessage.TURN_END,
-                data: {
-                    cards: r.cards,
-                    match: r.match,
-                },
-            });
+    async sendTurnEnd(match: Match, winnerId: number) {
+        this.server.to('match_' + match.id).emit(this.msgKey, {
+            code: MatchServerMessage.TURN_END,
+            data: {
+                winnerId: winnerId,
+            },
         });
     }
 
-    async sendRoundEnd(match: Match) {
-        const resources = this.matchService.getMatchResources(match);
-
-        resources.forEach((r) => {
-            this.server.to(r.clientId).emit(this.msgKey, {
-                code: MatchServerMessage.ROUND_END,
-                data: {
-                    cards: r.cards,
-                    match: r.match,
-                },
-            });
+    async sendRoundEnd(match: Match, losers: number[]) {
+        this.server.to('match_' + match.id).emit(this.msgKey, {
+            code: MatchServerMessage.ROUND_END,
+            data: {
+                losers: losers,
+            },
         });
     }
 
@@ -312,17 +327,17 @@ export class MatchGateway {
         });
     }
 
-    async sendPlayerStatus(match: Match) {
-        const resources = this.matchService.getMatchResources(match);
-
-        resources.forEach((r) => {
-            this.server.to(r.clientId).emit(this.msgKey, {
-                code: MatchServerMessage.PLAYER_STATUS,
-                data: {
-                    cards: r.cards,
-                    match: r.match,
-                },
-            });
+    async sendPlayerStatus(
+        match: Match,
+        playerId: number,
+        status: PlayerStatus,
+    ) {
+        this.server.to('match_' + match.id).emit(this.msgKey, {
+            code: MatchServerMessage.PLAYER_STATUS,
+            data: {
+                playerId: playerId,
+                status: status,
+            },
         });
     }
 }
