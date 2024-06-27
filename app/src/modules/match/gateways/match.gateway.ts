@@ -18,7 +18,7 @@ import {
 export class MatchGateway {
     @WebSocketServer() server;
     msgKey = 'match-msg';
-    defaultCounter = 1;
+    defaultCounter = 30;
 
     constructor(private matchService: MatchService) {}
 
