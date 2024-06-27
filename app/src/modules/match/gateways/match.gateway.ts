@@ -35,10 +35,7 @@ export class MatchGateway {
 
         client.join('match_' + match.id);
 
-        this.server.to('match_' + match.id).emit('match-msg', {
-            code: 'PLAYER-STATUS',
-            data: match,
-        });
+        this.sendPlayerStatus(match);
     }
 
     @SubscribeMessage('bet')
@@ -199,16 +196,44 @@ export class MatchGateway {
     }
 
     async sendBet(match: Match) {
-        this.server.to('match_' + match.id).emit('match-msg', {
-            code: 'BET',
-            data: match,
+        const resources = this.matchService.getMatchResources(match);
+
+        resources.forEach((r) => {
+            this.server.to(r.clientId).emit('match-msg', {
+                code: 'BET',
+                data: {
+                    cards: r.cards,
+                    match: r.match,
+                },
+            });
         });
     }
 
     async sendPlay(match: Match) {
-        this.server.to('match_' + match.id).emit('match-msg', {
-            code: 'PLAY',
-            data: match,
+        const resources = this.matchService.getMatchResources(match);
+
+        resources.forEach((r) => {
+            this.server.to(r.clientId).emit('match-msg', {
+                code: 'PLAY',
+                data: {
+                    cards: r.cards,
+                    match: r.match,
+                },
+            });
+        });
+    }
+
+    async sendPlayerStatus(match: Match) {
+        const resources = this.matchService.getMatchResources(match);
+
+        resources.forEach((r) => {
+            this.server.to(r.clientId).emit('match-msg', {
+                code: 'PLAYER-STATUS',
+                data: {
+                    cards: r.cards,
+                    match: r.match,
+                },
+            });
         });
     }
 }

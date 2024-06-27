@@ -15,3 +15,14 @@ export interface Player {
     socketClientId: string | null;
     play: Play | null;
 }
+
+export interface PlayerResouce {
+    id: number;
+    status: PlayerStatus;
+    user: User;
+    type: PlayerType;
+    bet: number | null;
+    wins: number;
+    cardsOnHand: number;
+    play: Play | null;
+}

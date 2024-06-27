@@ -4,7 +4,7 @@ import {
     PlayerStatus,
     PlayerType,
 } from 'src/common/enums/match.enum';
-import { Match } from '../interfaces/match.interface';
+import { Match, MatchResouce } from '../interfaces/match.interface';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
 import { Player } from '../interfaces/player.interface';
 
@@ -24,13 +24,10 @@ export class MatchService {
     }
 
     getCardFromDeck(match: Match): number {
-        const cardIndex = this.randomIntFromInterval(
-            0,
-            match.unsedCards.length - 1,
-        );
-        const card: number = match.unsedCards[cardIndex];
+        const cardIndex = this.randomIntFromInterval(0, match.deck.length - 1);
+        const card: number = match.deck[cardIndex];
 
-        match.unsedCards.splice(cardIndex, 1);
+        match.deck.splice(cardIndex, 1);
 
         return card;
     }
@@ -290,7 +287,7 @@ export class MatchService {
             players: [],
             sky: null,
             status: MatchStatus.STARTING,
-            unsedCards: [...Array(40).keys()],
+            deck: [...Array(40).keys()],
             tableCard: null,
             playOrder: [],
             turn: 1,
@@ -331,7 +328,7 @@ export class MatchService {
     }
 
     setDeck(match: Match): void {
-        match.unsedCards = [...Array(40).keys()];
+        match.deck = [...Array(40).keys()];
     }
 
     setTableCard(match: Match): void {
@@ -549,5 +546,44 @@ export class MatchService {
     updateStatus(match: Match, status: MatchStatus): MatchStatus {
         match.status = status;
         return match.status;
+    }
+
+    getMatchResources(
+        match: Match,
+    ): { clientId: string; cards: number[]; match: MatchResouce }[] {
+        const matchResource: MatchResouce = {
+            id: match.id,
+            status: match.status,
+            roomCode: match.roomCode,
+            round: match.round,
+            turn: match.turn,
+            turnsLeft: match.turnsLeft,
+            littleCorner: match.littleCorner,
+            sky: match.sky,
+            tableCard: match.tableCard,
+            playOrder: match.playOrder,
+            players: match.players.map((p) => {
+                return {
+                    id: p.id,
+                    status: p.status,
+                    bet: p.bet,
+                    cardsOnHand: p.cardsOnHand,
+                    play: p.play,
+                    type: p.type,
+                    user: p.user,
+                    wins: p.wins,
+                };
+            }),
+        };
+
+        const result = match.players.map((p) => {
+            return {
+                clientId: p.socketClientId,
+                cards: p.cards,
+                match: matchResource,
+            };
+        });
+
+        return result;
     }
 }
