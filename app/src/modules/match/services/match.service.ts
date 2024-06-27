@@ -317,7 +317,9 @@ export class MatchService {
             });
         });
 
-        this.startRound(match);
+        this.setDeck(match);
+
+        this.setTableCard(match);
 
         this.sortCards(match);
 
@@ -328,8 +330,11 @@ export class MatchService {
         return match;
     }
 
-    startRound(match: Match): void {
+    setDeck(match: Match): void {
         match.unsedCards = [...Array(40).keys()];
+    }
+
+    setTableCard(match: Match): void {
         match.tableCard = this.getCardFromDeck(match);
     }
 
@@ -340,7 +345,7 @@ export class MatchService {
     getPlayerOrder(players: Player[], first: number | null = null): number[] {
         const order = [];
         players.forEach((player) => {
-            if (player.cards.length > 0) {
+            if (player.cardsOnNextRound > 0) {
                 order.push(player.id);
             }
         });
@@ -375,37 +380,21 @@ export class MatchService {
     }
 
     verifyBetsRequest(match: Match): number {
-        match.status = MatchStatus.REQUESTING_BETS;
-
-        if (
-            match.players.find(
-                (player) => player.cards.length < player.cardsOnNextRound,
-            )
-        ) {
-            this.sortCards(match);
-        }
-
         const nextPlayer: Player | null = this.nextPlayerToBet(match);
 
         if (nextPlayer) {
             return nextPlayer.id;
         }
 
-        match.status = MatchStatus.REQUESTING_PLAYS;
-
         return -1;
     }
 
     verifyPlaysRequest(match: Match): number {
-        match.status = MatchStatus.REQUESTING_PLAYS;
-
         const nextPlayer: Player | null = this.nextPlayerToPlay(match);
 
         if (nextPlayer) {
             return nextPlayer.id;
         }
-
-        match.status = MatchStatus.FINISHED;
 
         return -1;
     }
@@ -478,11 +467,13 @@ export class MatchService {
     calculateTurnWinner(match: Match): Player {
         const trumpPartition = Math.floor(match.tableCard / 4);
 
-        const plays: { playerId: number; card: number }[] = match.players.map(
-            (p) => {
-                return { playerId: p.id, card: p.play.cardId };
-            },
-        );
+        const plays: { playerId: number; card: number }[] = [];
+
+        match.players.forEach((p) => {
+            if (p.play) {
+                plays.push({ playerId: p.id, card: p.play.cardId });
+            }
+        });
 
         plays.forEach((play) => {
             if (Math.floor(play.card / 4) == trumpPartition) {
@@ -499,28 +490,40 @@ export class MatchService {
         return winnerPlayer;
     }
 
-    startNextTurn(match: Match, winner: Player) {
+    startNextTurn(match: Match, winner: Player): MatchStatus {
         winner.wins++;
 
         match.turnsLeft--;
 
         if (match.turnsLeft <= 0) {
-            this.calculateRoundLosers(match);
+            const losers: Player[] = this.calculateRoundLosers(match);
 
-            match.turn = 0;
-            match.round++;
-
-            this.startRound(match);
-
-            this.sortCards(match);
-
-            match.turn++;
-
-            match.players.forEach((p) => (p.play = null));
+            losers.forEach((l) => {
+                l.cardsOnNextRound--;
+            });
 
             match.playOrder = this.getPlayerOrder(match.players);
 
-            match.status = MatchStatus.REQUESTING_BETS;
+            if (match.playOrder.length < 2) {
+                return this.updateStatus(match, MatchStatus.FINISHED);
+            } else {
+                match.turn = 1;
+                match.round++;
+
+                this.setDeck(match);
+
+                this.setTableCard(match);
+
+                this.sortCards(match);
+
+                match.players.forEach((p) => {
+                    p.play = null;
+                    p.bet = null;
+                    p.wins = 0;
+                });
+
+                return this.updateStatus(match, MatchStatus.REQUESTING_BETS);
+            }
         } else {
             match.turn++;
 
@@ -528,23 +531,23 @@ export class MatchService {
 
             match.playOrder = this.getPlayerOrder(match.players, winner.id);
 
-            if (match.playOrder.length > 1) {
-                match.status = MatchStatus.REQUESTING_PLAYS;
-            } else {
-                match.status = MatchStatus.FINISHED;
-            }
+            return this.updateStatus(match, MatchStatus.REQUESTING_PLAYS);
         }
     }
 
-    calculateRoundLosers(match: Match) {
+    calculateRoundLosers(match: Match): Player[] {
+        const losers: Player[] = [];
         match.players.forEach((p) => {
             if (p.bet != p.wins && p.cardsOnNextRound > 0) {
-                p.cardsOnNextRound--;
-                p.bet = 0;
-                p.wins = 0;
+                losers.push(p);
             }
-
-            p.cards = [];
         });
+
+        return losers;
+    }
+
+    updateStatus(match: Match, status: MatchStatus): MatchStatus {
+        match.status = status;
+        return match.status;
     }
 }

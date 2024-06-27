@@ -2,7 +2,8 @@ export enum MatchStatus {
     STARTING = 1,
     REQUESTING_BETS = 2,
     REQUESTING_PLAYS = 3,
-    FINISHED = 4,
+    TURN_FINISHED = 4,
+    FINISHED = 5,
 }
 
 export enum PlayerStatus {

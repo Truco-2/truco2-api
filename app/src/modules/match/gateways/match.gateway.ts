@@ -54,10 +54,7 @@ export class MatchGateway {
 
         client.join('match_' + match.id);
 
-        this.server.to('match_' + match.id).emit('match-msg', {
-            code: 'BET',
-            data: match,
-        });
+        this.sendBet(match);
     }
 
     @SubscribeMessage('play')
@@ -73,13 +70,13 @@ export class MatchGateway {
 
         client.join('match_' + match.id);
 
-        this.server.to('match_' + match.id).emit('match-msg', {
-            code: 'PLAY',
-            data: match,
-        });
+        this.sendPlay(match);
     }
 
-    async sendStartTimer(match: Match, counter: number): Promise<void> {
+    async sendStartTimer(
+        match: Match,
+        counter: number = this.defaultCounter,
+    ): Promise<void> {
         setTimeout(() => {
             if (match.status == MatchStatus.STARTING) {
                 this.server.to('match_' + match.id).emit('match-msg', {
@@ -94,6 +91,10 @@ export class MatchGateway {
                 if (counter > 0) {
                     this.sendStartTimer(match, counter);
                 } else {
+                    this.matchService.updateStatus(
+                        match,
+                        MatchStatus.REQUESTING_BETS,
+                    );
                     this.requestBets(match, this.defaultCounter);
                 }
             }
@@ -132,14 +133,15 @@ export class MatchGateway {
                 } else {
                     this.matchService.makeBetBot(match.id, playerId);
 
-                    this.server.to('match_' + match.id).emit('match-msg', {
-                        code: 'BET',
-                        data: match,
-                    });
+                    this.sendBet(match);
 
                     this.requestBets(match, this.defaultCounter);
                 }
             } else {
+                this.matchService.updateStatus(
+                    match,
+                    MatchStatus.REQUESTING_PLAYS,
+                );
                 this.requestPlays(match, this.defaultCounter);
             }
         }, 1000);
@@ -151,8 +153,6 @@ export class MatchGateway {
         latsId: number = -10,
     ): Promise<void> {
         setTimeout(() => {
-            console.log(match);
-
             const playerId = this.matchService.verifyPlaysRequest(match);
 
             if (playerId != latsId) {
@@ -175,24 +175,40 @@ export class MatchGateway {
                 } else {
                     this.matchService.makePlayBot(match.id, playerId);
 
-                    this.server.to('match_' + match.id).emit('match-msg', {
-                        code: 'PLAY',
-                        data: match,
-                    });
+                    this.sendPlay(match);
 
                     this.requestPlays(match, this.defaultCounter);
                 }
             } else {
+                this.matchService.updateStatus(
+                    match,
+                    MatchStatus.TURN_FINISHED,
+                );
+
                 const winner = this.matchService.calculateTurnWinner(match);
 
-                this.matchService.startNextTurn(match, winner);
+                const status = this.matchService.startNextTurn(match, winner);
 
-                if (match.status == MatchStatus.REQUESTING_PLAYS) {
+                if (status == MatchStatus.REQUESTING_PLAYS) {
                     this.requestPlays(match, this.defaultCounter);
-                } else if (match.status == MatchStatus.REQUESTING_BETS) {
+                } else if (status == MatchStatus.REQUESTING_BETS) {
                     this.requestBets(match, this.defaultCounter);
                 }
             }
         }, 1000);
+    }
+
+    async sendBet(match: Match) {
+        this.server.to('match_' + match.id).emit('match-msg', {
+            code: 'BET',
+            data: match,
+        });
+    }
+
+    async sendPlay(match: Match) {
+        this.server.to('match_' + match.id).emit('match-msg', {
+            code: 'PLAY',
+            data: match,
+        });
     }
 }
