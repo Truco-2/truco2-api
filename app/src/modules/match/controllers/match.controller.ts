@@ -44,7 +44,9 @@ export class MatchController {
 
         this.roomGateway.updateAvailableList(room);
 
-        this.matchGateway.sendStartTimer(match, 10);
+        this.roomGateway.startMatch(room, match);
+
+        this.matchGateway.sendStartTimer(match);
 
         return match;
     }

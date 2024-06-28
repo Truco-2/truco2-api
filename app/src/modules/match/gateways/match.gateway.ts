@@ -336,7 +336,7 @@ export class MatchGateway {
 
         resources.forEach((r) => {
             this.server.to(r.clientId).emit(this.msgKey, {
-                code: MatchServerMessage.MATCH_END,
+                code: MatchServerMessage.PLAYER_STATUS,
                 data: {
                     playerId: playerId,
                     status: status,
