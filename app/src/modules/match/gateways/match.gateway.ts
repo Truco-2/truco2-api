@@ -332,12 +332,18 @@ export class MatchGateway {
         playerId: number,
         status: PlayerStatus,
     ) {
-        this.server.to('match_' + match.id).emit(this.msgKey, {
-            code: MatchServerMessage.PLAYER_STATUS,
-            data: {
-                playerId: playerId,
-                status: status,
-            },
+        const resources = this.matchService.getMatchResources(match);
+
+        resources.forEach((r) => {
+            this.server.to(r.clientId).emit(this.msgKey, {
+                code: MatchServerMessage.MATCH_END,
+                data: {
+                    playerId: playerId,
+                    status: status,
+                    cards: r.cards,
+                    match: r.match,
+                },
+            });
         });
     }
 }
