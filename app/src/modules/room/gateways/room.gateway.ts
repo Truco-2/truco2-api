@@ -55,14 +55,14 @@ export class RoomGateway {
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter-room')
     async handleEnterRoom(
-        @MessageBody() code: string,
+        @MessageBody() body: { code: string },
         @ConnectedSocket() client: Socket,
     ): Promise<void> {
-        client.join(this.roomKey + code);
+        client.join(this.roomKey + body.code);
 
-        const room = await this.roomService.find(code);
+        const room = await this.roomService.find(body.code);
 
-        this.server.to(this.roomKey + code).emit(this.roomUpdateKey, room);
+        this.server.to(this.roomKey + body.code).emit(this.roomUpdateKey, room);
     }
 
     updateAvailableList(room: RoomDto): void {
