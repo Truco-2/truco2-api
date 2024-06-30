@@ -665,12 +665,16 @@ export class MatchService {
             const match = this.matchs.find((m) => m.id == client.matchId);
 
             if (match) {
-                match.players.find(
+                const player = match.players.find(
                     (p) => p.socketClientId == client.clientId,
-                ).status = status;
+                );
 
-                return match;
+                if (player) {
+                    player.status = status;
+                }
             }
+
+            return match;
         }
 
         return null;

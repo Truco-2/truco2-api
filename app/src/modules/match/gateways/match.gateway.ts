@@ -39,11 +39,13 @@ export class MatchGateway implements OnGatewayDisconnect {
             PlayerStatus.OFFLINE,
         );
 
-        this.sendPlayerStatus(
-            match,
-            this.matchService.getPlayerIdByClientId(client.id),
-            PlayerStatus.OFFLINE,
-        );
+        if (match) {
+            this.sendPlayerStatus(
+                match,
+                this.matchService.getPlayerIdByClientId(client.id),
+                PlayerStatus.OFFLINE,
+            );
+        }
     }
 
     @UseFilters(SocketIoExceptionFilter)
