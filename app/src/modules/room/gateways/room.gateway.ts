@@ -12,7 +12,6 @@ import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
 import { RoomDto } from '../dtos/room.dto';
 import { Match } from 'src/modules/match/interfaces/match.interface';
-import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
 
 @WebSocketGateway({ namespace: 'room', cors: true })
 export class RoomGateway {
@@ -56,10 +55,10 @@ export class RoomGateway {
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter-room')
     async handleEnterRoom(
-        @GetUser() user: { userId: number; username: string },
+        @MessageBody() body: { code: string },
         @ConnectedSocket() client: Socket,
     ): Promise<void> {
-        const room = await this.roomService.findByUser(user.userId);
+        const room = await this.roomService.find(body.code);
 
         client.join(this.roomKey + room.code);
 
