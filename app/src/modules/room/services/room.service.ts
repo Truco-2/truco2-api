@@ -261,7 +261,10 @@ export class RoomService {
 
         // If does not exist any player
         if (updatedRoom.usersRooms.length == 0) {
-            await this.prisma.room.delete({
+            await this.prisma.room.update({
+                data: {
+                    status: RoomStatus.FINISHED,
+                },
                 where: { id: room.id },
             });
         }
@@ -277,12 +280,7 @@ export class RoomService {
         }
 
         const finalRoom = this.prisma.room.findFirst({
-            where: {
-                AND: [
-                    { NOT: { status: RoomStatus.FINISHED } },
-                    { usersRooms: { some: { userId: userId } } },
-                ],
-            },
+            where: { id: room.id },
             include: {
                 usersRooms: true,
             },
