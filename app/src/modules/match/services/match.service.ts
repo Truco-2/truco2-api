@@ -7,12 +7,14 @@ import {
 import { Match, MatchResouce } from '../interfaces/match.interface';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
 import { Player } from '../interfaces/player.interface';
+import { RoomStatus } from 'src/common/enums/room-status.enum';
 
 @Injectable()
 export class MatchService {
     clients: {
         userId: number;
         clientId: string;
+        matchId: number;
     }[] = [];
 
     matchs: Match[] = [];
@@ -47,6 +49,7 @@ export class MatchService {
             this.clients.push({
                 clientId: clientId,
                 userId: userId,
+                matchId: matchId,
             });
         }
 
@@ -254,26 +257,60 @@ export class MatchService {
         return player.play.cardId;
     }
 
-    async create(roomCode: string): Promise<Match> {
-        const room = await this.prisma.room.findFirst({
+    async create(userId: number): Promise<Match> {
+        const user = await this.prisma.user.findFirst({
             where: {
-                code: roomCode,
+                AND: [
+                    {
+                        id: userId,
+                    },
+                    {
+                        usersRooms: {
+                            some: {
+                                room: {
+                                    AND: [
+                                        {
+                                            status: RoomStatus.WAITING,
+                                        },
+                                        {
+                                            ownerId: userId,
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                ],
             },
             include: {
                 usersRooms: {
                     include: {
-                        user: true,
+                        room: {
+                            include: {
+                                usersRooms: {
+                                    include: {
+                                        user: true,
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
         });
 
-        if (!room) {
-            throw new Error('room not found');
+        if (!user) {
+            throw new Error('User is not in room or is not the room owner');
+        }
+
+        const room = user.usersRooms[0].room;
+
+        if (room.usersRooms.length < 2) {
+            throw new Error('Room has not enough players');
         }
 
         const matchExist = this.matchs.find(
-            (match) => match.roomCode == roomCode,
+            (match) => match.roomCode == room.code,
         );
 
         if (matchExist) {
@@ -282,7 +319,7 @@ export class MatchService {
 
         const match: Match = {
             id: this.matchs.length + 1,
-            roomCode: roomCode,
+            roomCode: room.code,
             littleCorner: null,
             players: [],
             sky: null,
@@ -589,5 +626,33 @@ export class MatchService {
 
     getPlayerIdByClientId(clientId: string): number {
         return this.clients.find((c) => c.clientId == clientId).userId;
+    }
+
+    endMatch(match: Match): void {
+        this.clients.forEach((c) => {
+            if (c.matchId == match.id) {
+                const index = this.clients.indexOf(c, 0);
+                if (index > -1) {
+                    this.clients.splice(index, 1);
+                }
+            }
+        });
+
+        const index = this.matchs.indexOf(match, 0);
+        if (index > -1) {
+            this.matchs.splice(index, 1);
+        }
+    }
+
+    getClientsByMatch(match: Match): string[] {
+        const clientIds: string[] = [];
+
+        this.clients.forEach((c) => {
+            if (c.matchId == match.id) {
+                clientIds.push(c.clientId);
+            }
+        });
+
+        return clientIds;
     }
 }

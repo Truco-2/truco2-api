@@ -6,21 +6,26 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { MatchService } from '../services/match.service';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Match } from '../interfaces/match.interface';
 import {
     MatchServerMessage,
     MatchStatus,
     PlayerStatus,
 } from 'src/common/enums/match.enum';
+import { RoomService } from 'src/modules/room/services/room.service';
+import { RoomStatus } from 'src/common/enums/room-status.enum';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
-    @WebSocketServer() server;
+    @WebSocketServer() server: Server;
     msgKey = 'match-msg';
     defaultCounter = 30;
 
-    constructor(private matchService: MatchService) {}
+    constructor(
+        private matchService: MatchService,
+        private roomService: RoomService,
+    ) {}
 
     @SubscribeMessage('enter')
     async handleEnter(
@@ -212,6 +217,13 @@ export class MatchGateway {
                     );
 
                     this.sendMatchEnd(match);
+
+                    this.roomService.updateStatus(
+                        match.roomCode,
+                        RoomStatus.WAITING,
+                    );
+
+                    this.matchService.endMatch(match);
                 }
             }
         }, 1000);
