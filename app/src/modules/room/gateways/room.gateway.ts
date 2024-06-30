@@ -65,6 +65,7 @@ export class RoomGateway {
         this.server.to(this.roomKey + body.code).emit(this.roomUpdateKey, room);
     }
 
+    @UseFilters(SocketIoExceptionFilter)
     updateAvailableList(room: RoomDto): void {
         this.server
             .to(this.availableRoomsListKey)
@@ -73,6 +74,7 @@ export class RoomGateway {
         this.server.to(this.roomKey + room.code).emit(this.roomUpdateKey, room);
     }
 
+    @UseFilters(SocketIoExceptionFilter)
     startMatch(room: RoomDto, match: Match): void {
         this.server
             .to(this.roomKey + room.code)

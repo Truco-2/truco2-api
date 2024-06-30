@@ -1,16 +1,18 @@
 import {
     ArgumentsHost,
+    BadRequestException,
     Catch,
     ExceptionFilter,
+    HttpException,
     UnauthorizedException,
 } from '@nestjs/common';
 import { Socket } from 'socket.io';
 
-@Catch(UnauthorizedException)
-export class SocketIoExceptionFilter implements ExceptionFilter {
-    catch(exception: UnauthorizedException, host: ArgumentsHost) {
+@Catch(BadRequestException, HttpException, Error, UnauthorizedException)
+export class SocketIoExceptionFilter<T> implements ExceptionFilter {
+    catch(exception: T, host: ArgumentsHost) {
         const socketClient: Socket = host.switchToWs().getClient();
-        socketClient.emit('error', 'Unauthorized');
+        socketClient.emit('error', exception['message']);
         socketClient.rooms.forEach((room) => {
             socketClient.leave(room);
         });

@@ -15,6 +15,9 @@ import {
 } from 'src/common/enums/match.enum';
 import { RoomService } from 'src/modules/room/services/room.service';
 import { RoomStatus } from 'src/common/enums/room-status.enum';
+import { UseFilters, UseGuards } from '@nestjs/common';
+import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
@@ -27,6 +30,8 @@ export class MatchGateway {
         private roomService: RoomService,
     ) {}
 
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter')
     async handleEnter(
         @MessageBody() body: { matchId: number; userId: number },
@@ -47,6 +52,8 @@ export class MatchGateway {
         );
     }
 
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
     @SubscribeMessage('bet')
     async handleBet(
         @MessageBody() body: { matchId: number; bet: number },
@@ -67,6 +74,8 @@ export class MatchGateway {
         );
     }
 
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
     @SubscribeMessage('play')
     async handlePlay(
         @MessageBody() body: { matchId: number; card: number },
@@ -87,6 +96,7 @@ export class MatchGateway {
         );
     }
 
+    @UseFilters(SocketIoExceptionFilter)
     async sendStartTimer(
         match: Match,
         counter: number = this.defaultCounter,
@@ -113,6 +123,7 @@ export class MatchGateway {
         }, 1000);
     }
 
+    @UseFilters(SocketIoExceptionFilter)
     async requestBets(
         match: Match,
         counter: number,
@@ -155,6 +166,7 @@ export class MatchGateway {
         }, 1000);
     }
 
+    @UseFilters(SocketIoExceptionFilter)
     async requestPlays(
         match: Match,
         counter: number,
