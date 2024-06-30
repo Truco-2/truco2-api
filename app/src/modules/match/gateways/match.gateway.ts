@@ -121,7 +121,9 @@ export class MatchGateway implements OnGatewayDisconnect {
 
                     this.sendRoundStart(match);
 
-                    this.requestBets(match, this.defaultCounter);
+                    setTimeout(() => {
+                        this.requestBets(match, this.defaultCounter);
+                    }, 1000);
                 }
             }
         }, 1000);
@@ -133,41 +135,42 @@ export class MatchGateway implements OnGatewayDisconnect {
         counter: number,
         latsId: number = -10,
     ): Promise<void> {
-        setTimeout(async () => {
-            const playerId = this.matchService.verifyBetsRequest(match);
+        const playerId = this.matchService.verifyBetsRequest(match);
 
-            if (playerId != latsId) {
-                counter = this.defaultCounter;
-            }
+        if (playerId != latsId) {
+            counter = this.defaultCounter;
+        }
 
-            if (match.status == MatchStatus.REQUESTING_BETS && playerId > -1) {
-                this.sendRequestBet(match, playerId, counter);
+        if (match.status == MatchStatus.REQUESTING_BETS && playerId > -1) {
+            this.sendRequestBet(match, playerId, counter);
 
-                counter--;
+            counter--;
 
-                if (counter > 0) {
+            if (counter > 0) {
+                setTimeout(() => {
                     this.requestBets(match, counter, playerId);
-                } else {
-                    const bet = await this.matchService.makeBetBot(
-                        match.id,
-                        playerId,
-                    );
-
-                    this.sendBet(match, playerId, bet);
-
-                    this.requestBets(match, this.defaultCounter);
-                }
+                }, 1000);
             } else {
-                this.matchService.updateStatus(
-                    match,
-                    MatchStatus.REQUESTING_PLAYS,
+                const bet = await this.matchService.makeBetBot(
+                    match.id,
+                    playerId,
                 );
 
-                this.sendTurnStart(match);
+                this.sendBet(match, playerId, bet);
 
-                this.requestPlays(match, this.defaultCounter);
+                setTimeout(() => {
+                    this.requestBets(match, this.defaultCounter);
+                }, 1000);
             }
-        }, 1000);
+        } else {
+            this.matchService.updateStatus(match, MatchStatus.REQUESTING_PLAYS);
+
+            this.sendTurnStart(match);
+
+            setTimeout(() => {
+                this.requestPlays(match, this.defaultCounter);
+            }, 1000);
+        }
     }
 
     @UseFilters(SocketIoExceptionFilter)
@@ -176,73 +179,76 @@ export class MatchGateway implements OnGatewayDisconnect {
         counter: number,
         latsId: number = -10,
     ): Promise<void> {
-        setTimeout(async () => {
-            const playerId = this.matchService.verifyPlaysRequest(match);
+        const playerId = this.matchService.verifyPlaysRequest(match);
 
-            if (playerId != latsId) {
-                counter = this.defaultCounter;
-            }
+        if (playerId != latsId) {
+            counter = this.defaultCounter;
+        }
 
-            if (match.status == MatchStatus.REQUESTING_PLAYS && playerId > -1) {
-                this.sendRequestPlay(match, playerId, counter);
+        if (match.status == MatchStatus.REQUESTING_PLAYS && playerId > -1) {
+            this.sendRequestPlay(match, playerId, counter);
 
-                counter--;
+            counter--;
 
-                if (counter > 0) {
+            if (counter > 0) {
+                setTimeout(() => {
                     this.requestPlays(match, counter, playerId);
-                } else {
-                    const card = await this.matchService.makePlayBot(
-                        match.id,
-                        playerId,
-                    );
-
-                    this.sendPlay(match, playerId, card);
-
-                    this.requestPlays(match, this.defaultCounter);
-                }
+                }, 1000);
             } else {
-                this.matchService.updateStatus(
-                    match,
-                    MatchStatus.TURN_FINISHED,
+                const card = await this.matchService.makePlayBot(
+                    match.id,
+                    playerId,
                 );
 
-                const winner = this.matchService.calculateTurnWinner(match);
+                this.sendPlay(match, playerId, card);
 
-                const losers = this.matchService.calculateRoundLosers(match);
-
-                const status = this.matchService.startNextTurn(match, winner);
-
-                this.sendTurnEnd(match, winner.id);
-
-                if (status == MatchStatus.REQUESTING_PLAYS) {
-                    this.sendTurnStart(match);
+                setTimeout(() => {
                     this.requestPlays(match, this.defaultCounter);
-                } else if (status == MatchStatus.REQUESTING_BETS) {
-                    this.sendRoundEnd(
-                        match,
-                        losers.map((l) => l.id),
-                    );
-
-                    this.sendRoundStart(match);
-
-                    this.requestBets(match, this.defaultCounter);
-                } else {
-                    this.sendRoundEnd(
-                        match,
-                        losers.map((l) => l.id),
-                    );
-
-                    this.sendMatchEnd(match);
-
-                    this.roomService.updateStatus(
-                        match.roomCode,
-                        RoomStatus.WAITING,
-                    );
-
-                    this.matchService.endMatch(match);
-                }
+                }, 1000);
             }
-        }, 1000);
+        } else {
+            this.matchService.updateStatus(match, MatchStatus.TURN_FINISHED);
+
+            const winner = this.matchService.calculateTurnWinner(match);
+
+            const losers = this.matchService.calculateRoundLosers(match);
+
+            const status = this.matchService.startNextTurn(match, winner);
+
+            this.sendTurnEnd(match, winner.id);
+
+            if (status == MatchStatus.REQUESTING_PLAYS) {
+                this.sendTurnStart(match);
+                setTimeout(() => {
+                    this.requestPlays(match, this.defaultCounter);
+                }, 1000);
+            } else if (status == MatchStatus.REQUESTING_BETS) {
+                this.sendRoundEnd(
+                    match,
+                    losers.map((l) => l.id),
+                );
+
+                this.sendRoundStart(match);
+
+                setTimeout(() => {
+                    this.requestBets(match, this.defaultCounter);
+                }, 1000);
+            } else {
+                this.sendRoundEnd(
+                    match,
+                    losers.map((l) => l.id),
+                );
+
+                this.sendMatchEnd(match);
+
+                this.roomService.updateStatus(
+                    match.roomCode,
+                    RoomStatus.WAITING,
+                );
+
+                this.matchService.endMatch(match);
+            }
+        }
     }
 
     async sendStartCounter(match: Match, counter: number) {
