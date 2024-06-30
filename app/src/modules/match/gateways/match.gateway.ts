@@ -1,6 +1,7 @@
 import {
     ConnectedSocket,
     MessageBody,
+    OnGatewayDisconnect,
     SubscribeMessage,
     WebSocketGateway,
     WebSocketServer,
@@ -21,7 +22,7 @@ import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
-export class MatchGateway {
+export class MatchGateway implements OnGatewayDisconnect {
     @WebSocketServer() server: Server;
     msgKey = 'match-msg';
     defaultCounter = 30;
@@ -30,6 +31,20 @@ export class MatchGateway {
         private matchService: MatchService,
         private roomService: RoomService,
     ) {}
+
+    @UseFilters(SocketIoExceptionFilter)
+    handleDisconnect(client: Socket) {
+        const match = this.matchService.updateUserStatus(
+            client.id,
+            PlayerStatus.OFFLINE,
+        );
+
+        this.sendPlayerStatus(
+            match,
+            this.matchService.getPlayerIdByClientId(client.id),
+            PlayerStatus.OFFLINE,
+        );
+    }
 
     @UseFilters(SocketIoExceptionFilter)
     @UseGuards(JwtAuthGuard)

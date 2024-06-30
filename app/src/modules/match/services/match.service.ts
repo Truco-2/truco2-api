@@ -649,4 +649,22 @@ export class MatchService {
 
         return clientIds;
     }
+
+    updateUserStatus(clientId: string, status: PlayerStatus): Match {
+        const client = this.clients.find((c) => c.clientId == clientId);
+
+        if (client) {
+            const match = this.matchs.find((m) => m.id == client.matchId);
+
+            if (match) {
+                match.players.find(
+                    (p) => p.socketClientId == client.clientId,
+                ).status = status;
+
+                return match;
+            }
+        }
+
+        return null;
+    }
 }
