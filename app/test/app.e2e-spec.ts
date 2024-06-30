@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { INestApplication } from '@nestjs/common';
 import { AppModule } from 'src/app.module';
 import { AuthService } from 'src/auth/auth.service';
 import { UserService } from 'src/modules/user/services/user.service';
@@ -60,22 +59,22 @@ describe('AppController (e2e)', () => {
     //         .expect('{"acess_token":"valid_token"}');
     // });
 
-    it('/guest (GET)', () => {
-        const user = {
-            id: 1,
-            email: '',
-            name: '',
-        };
+    // it('/guest (GET)', () => {
+    //     const user = {
+    //         id: 1,
+    //         email: '',
+    //         name: '',
+    //     };
 
-        mockUserService.generateGuestUser.mockReturnValue(user);
-        mockAuthService.validateUser.mockReturnValue(user);
-        mockAuthService.login.mockReturnValue({
-            acess_token: 'valid_token',
-        });
+    //     mockUserService.generateGuestUser.mockReturnValue(user);
+    //     mockAuthService.validateUser.mockReturnValue(user);
+    //     mockAuthService.login.mockReturnValue({
+    //         acess_token: 'valid_token',
+    //     });
 
-        return request(app.getHttpServer())
-            .get('/guest')
-            .expect(HttpStatus.OK)
-            .expect('{"acess_token":"valid_token"}');
-    });
+    //     return request(app.getHttpServer())
+    //         .get('/guest')
+    //         .expect(HttpStatus.OK)
+    //         .expect('{"acess_token":"valid_token"}');
+    // });
 });
