@@ -493,7 +493,9 @@ export class MatchService {
     }
 
     calculateTurnWinner(match: Match): Player {
-        const trumpPartition = Math.floor(match.tableCard / 4);
+        let trumpPartition = Math.floor(match.tableCard / 4);
+
+        trumpPartition = trumpPartition == 9 ? 1 : trumpPartition + 1;
 
         const plays: { playerId: number; card: number }[] = [];
 
