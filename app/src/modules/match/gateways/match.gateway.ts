@@ -47,6 +47,15 @@ export class MatchGateway implements OnGatewayDisconnect {
     }
 
     @UseFilters(SocketIoExceptionFilter)
+    @SubscribeMessage('list')
+    async handleList(@ConnectedSocket() client: Socket): Promise<void> {
+        this.server.to(client.id).emit('listing', {
+            clients: this.matchService.clients,
+            matchs: this.matchService.matchs,
+        });
+    }
+
+    @UseFilters(SocketIoExceptionFilter)
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter')
     async handleEnter(
