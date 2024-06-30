@@ -621,7 +621,13 @@ export class MatchService {
     }
 
     getPlayerIdByClientId(clientId: string): number {
-        return this.clients.find((c) => c.clientId == clientId).userId;
+        const client = this.clients.find((c) => c.clientId == clientId);
+
+        if (client) {
+            return client.userId;
+        }
+
+        return null;
     }
 
     endMatch(match: Match): void {
