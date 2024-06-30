@@ -13,8 +13,11 @@ export class SocketIoExceptionFilter<T> implements ExceptionFilter {
     catch(exception: T, host: ArgumentsHost) {
         const socketClient: Socket = host.switchToWs().getClient();
         socketClient.emit('error', exception['message']);
-        socketClient.rooms.forEach((room) => {
-            socketClient.leave(room);
-        });
+
+        if (exception['message'] == 'Unauthorized') {
+            socketClient.rooms.forEach((room) => {
+                socketClient.leave(room);
+            });
+        }
     }
 }

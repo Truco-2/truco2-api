@@ -38,22 +38,16 @@ export class MatchService {
         return this.matchs;
     }
 
-    async enter(
-        matchId: number,
-        userId: number,
-        clientId: string,
-    ): Promise<Match> {
+    async enter(userId: number, clientId: string): Promise<Match> {
         const client = this.clients.find((client) => client.userId == userId);
 
         if (!client) {
-            this.clients.push({
-                clientId: clientId,
-                userId: userId,
-                matchId: matchId,
-            });
+            throw new Error('Player not found');
         }
 
-        const match = this.matchs.find((match) => match.id == matchId);
+        client.clientId = clientId;
+
+        const match = this.matchs.find((match) => match.id == client.matchId);
 
         if (!match) {
             throw new Error('Match not found');
@@ -71,16 +65,12 @@ export class MatchService {
         return match;
     }
 
-    async makeBet(
-        matchId: number,
-        bet: number,
-        clientId: string,
-    ): Promise<Match> {
+    async makeBet(bet: number, clientId: string): Promise<Match> {
         const client = this.clients.find(
             (client) => client.clientId == clientId,
         );
 
-        const match = this.matchs.find((match) => match.id == matchId);
+        const match = this.matchs.find((match) => match.id == client.matchId);
 
         if (!match) {
             throw new Error('Match not found');
@@ -119,16 +109,12 @@ export class MatchService {
         return match;
     }
 
-    async makePlay(
-        matchId: number,
-        card: number,
-        clientId: string,
-    ): Promise<Match> {
+    async makePlay(card: number, clientId: string): Promise<Match> {
         const client = this.clients.find(
             (client) => client.clientId == clientId,
         );
 
-        const match = this.matchs.find((match) => match.id == matchId);
+        const match = this.matchs.find((match) => match.id == client.matchId);
 
         if (!match) {
             throw new Error('Match not found');
@@ -300,7 +286,9 @@ export class MatchService {
         });
 
         if (!user) {
-            throw new Error('User is not in room or is not the room owner');
+            throw new Error(
+                'User is not in room or is not the room owner, or room is not in waiting status',
+            );
         }
 
         const room = user.usersRooms[0].room;
@@ -348,6 +336,12 @@ export class MatchService {
                     name: user.user.name,
                 },
                 play: null,
+            });
+
+            this.clients.push({
+                clientId: null,
+                userId: user.userId,
+                matchId: match.id,
             });
         });
 
@@ -648,7 +642,7 @@ export class MatchService {
         const clientIds: string[] = [];
 
         this.clients.forEach((c) => {
-            if (c.matchId == match.id) {
+            if (c.matchId == match.id && c.clientId) {
                 clientIds.push(c.clientId);
             }
         });

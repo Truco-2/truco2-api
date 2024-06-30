@@ -18,6 +18,7 @@ import { RoomStatus } from 'src/common/enums/room-status.enum';
 import { UseFilters, UseGuards } from '@nestjs/common';
 import { SocketIoExceptionFilter } from 'src/common/filters/socket-io-exception/socket-io-exception.filter';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
 
 @WebSocketGateway({ namespace: 'match', cors: true })
 export class MatchGateway {
@@ -34,14 +35,10 @@ export class MatchGateway {
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('enter')
     async handleEnter(
-        @MessageBody() body: { matchId: number; userId: number },
+        @GetUser() user: { userId: number; username: string },
         @ConnectedSocket() client: Socket,
     ): Promise<void> {
-        const match = await this.matchService.enter(
-            body.matchId,
-            body.userId,
-            client.id,
-        );
+        const match = await this.matchService.enter(user.userId, client.id);
 
         client.join('match_' + match.id);
 
@@ -56,14 +53,10 @@ export class MatchGateway {
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('bet')
     async handleBet(
-        @MessageBody() body: { matchId: number; bet: number },
+        @MessageBody() body: { bet: number },
         @ConnectedSocket() client: Socket,
     ): Promise<void> {
-        const match = await this.matchService.makeBet(
-            body.matchId,
-            body.bet,
-            client.id,
-        );
+        const match = await this.matchService.makeBet(body.bet, client.id);
 
         client.join('match_' + match.id);
 
@@ -78,14 +71,10 @@ export class MatchGateway {
     @UseGuards(JwtAuthGuard)
     @SubscribeMessage('play')
     async handlePlay(
-        @MessageBody() body: { matchId: number; card: number },
+        @MessageBody() body: { card: number },
         @ConnectedSocket() client: Socket,
     ): Promise<void> {
-        const match = await this.matchService.makePlay(
-            body.matchId,
-            body.card,
-            client.id,
-        );
+        const match = await this.matchService.makePlay(body.card, client.id);
 
         client.join('match_' + match.id);
 
