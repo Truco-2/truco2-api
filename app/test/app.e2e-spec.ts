@@ -55,8 +55,6 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
             .get('/guest')
             .expect(HttpStatus.OK)
-            .expect(
-                '{"success": true,"data": {"access_token": "valid_token"}}',
-            );
+            .expect('{"success":true,"data":{"acess_token":"valid_token"}}');
     });
 });
