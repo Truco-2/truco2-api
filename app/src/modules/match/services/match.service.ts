@@ -17,6 +17,8 @@ export class MatchService {
         matchId: number;
     }[] = [];
 
+    matchIdCounter = 0;
+
     matchs: Match[] = [];
 
     constructor(private prisma: PrismaService) {}
@@ -304,9 +306,10 @@ export class MatchService {
         if (matchExist) {
             return matchExist;
         }
+        this.matchIdCounter++;
 
         const match: Match = {
-            id: this.matchs.length + 1,
+            id: this.matchIdCounter,
             roomCode: room.code,
             littleCorner: null,
             players: [],
