@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
+import { CreateUserDto } from '../dtos/create-user.dto';
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,33 @@ export class UserService {
         return this.prisma.user.create({
             data: {
                 name: 'guest' + date,
+            },
+        });
+    }
+
+    async create(data: CreateUserDto): Promise<User> {
+        const verifyUserExist = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    {
+                        name: data.name,
+                    },
+                    {
+                        email: data.email,
+                    },
+                ],
+            },
+        });
+
+        if (verifyUserExist) {
+            throw new Error('User already exists');
+        }
+
+        return this.prisma.user.create({
+            data: {
+                name: data.name,
+                email: data.email,
+                password: data.password,
             },
         });
     }
