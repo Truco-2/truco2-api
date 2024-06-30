@@ -282,7 +282,11 @@ export class RoomService {
         const finalRoom = this.prisma.room.findFirst({
             where: { id: room.id },
             include: {
-                usersRooms: true,
+                usersRooms: {
+                    include: {
+                        user: true,
+                    },
+                },
             },
         });
 
