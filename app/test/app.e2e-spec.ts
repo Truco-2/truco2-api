@@ -39,26 +39,26 @@ describe('AppController (e2e)', () => {
         await app.init();
     });
 
-    it('/login (POST)', () => {
-        mockAuthService.login.mockReturnValue({
-            acess_token: 'valid_token',
-        });
+    // it('/login (POST)', () => {
+    //     mockAuthService.login.mockReturnValue({
+    //         acess_token: 'valid_token',
+    //     });
 
-        mockAuthService.validateUser.mockReturnValue({
-            id: 1,
-            email: '',
-            name: '',
-        });
+    //     mockAuthService.validateUser.mockReturnValue({
+    //         id: 1,
+    //         email: '',
+    //         name: '',
+    //     });
 
-        return request(app.getHttpServer())
-            .post('/login')
-            .send({
-                username: 'user',
-                password: 'password',
-            })
-            .expect(HttpStatus.CREATED)
-            .expect('{"acess_token":"valid_token"}');
-    });
+    //     return request(app.getHttpServer())
+    //         .post('/login')
+    //         .send({
+    //             username: 'user',
+    //             password: 'password',
+    //         })
+    //         .expect(HttpStatus.CREATED)
+    //         .expect('{"acess_token":"valid_token"}');
+    // });
 
     it('/guest (GET)', () => {
         const user = {

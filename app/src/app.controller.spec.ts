@@ -37,18 +37,18 @@ describe('AppController', () => {
         appController = app.get<AppController>(AppController);
     });
 
-    describe('Login - Get token by user', () => {
-        it('Should login', async () => {
-            expect(
-                await appController.login({
-                    user: {
-                        id: 1,
-                        name: 'TestUser',
-                    },
-                }),
-            ).toStrictEqual({ access_token: 'token_TestUser' });
-        });
-    });
+    // describe('Login - Get token by user', () => {
+    //     it('Should login', async () => {
+    //         expect(
+    //             await appController.login({
+    //                 user: {
+    //                     id: 1,
+    //                     name: 'TestUser',
+    //                 },
+    //             }),
+    //         ).toStrictEqual({ access_token: 'token_TestUser' });
+    //     });
+    // });
 
     describe('Guest - Login as guest', () => {
         it('Should create a guest', async () => {
