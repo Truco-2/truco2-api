@@ -331,12 +331,18 @@ export class MatchGateway implements OnGatewayDisconnect {
     }
 
     async sendPlay(match: Match, playerId: number, card: number) {
-        this.server.to('match_' + match.id).emit(this.msgKey, {
-            code: MatchServerMessage.PLAY,
-            data: {
-                playerId: playerId,
-                card: card,
-            },
+        const resources = this.matchService.getMatchResources(match);
+
+        resources.forEach((r) => {
+            this.server.to(r.clientId).emit(this.msgKey, {
+                code: MatchServerMessage.PLAY,
+                data: {
+                    playerId: playerId,
+                    card: card,
+                    cards: r.cards,
+                    match: r.match,
+                },
+            });
         });
     }
 
