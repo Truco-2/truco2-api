@@ -25,10 +25,8 @@ export class UserService {
             data: {
                 name:
                     'Guest_' +
-                    faker.string.alphanumeric({
-                        casing: 'upper',
+                    faker.string.numeric({
                         length: 6,
-                        exclude: ['O', 'I'],
                     }),
             },
         });
