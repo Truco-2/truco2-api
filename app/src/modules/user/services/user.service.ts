@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { faker } from '@faker-js/faker';
 
 @Injectable()
 export class UserService {
@@ -20,10 +21,15 @@ export class UserService {
     }
 
     async generateGuestUser(): Promise<User> {
-        const date = Date.now();
         return this.prisma.user.create({
             data: {
-                name: 'guest' + date,
+                name:
+                    'Guest_' +
+                    faker.string.alphanumeric({
+                        casing: 'upper',
+                        length: 6,
+                        exclude: ['O', 'I'],
+                    }),
             },
         });
     }
