@@ -10,6 +10,7 @@ export interface Match {
     sky: number | null;
     tableCard: number | null;
     playOrder: number[];
+    roundOrder: number[];
     deck: number[];
     turn: number;
     turnsLeft: number;

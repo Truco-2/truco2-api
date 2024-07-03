@@ -318,11 +318,13 @@ export class MatchService {
             deck: [...Array(40).keys()],
             tableCard: null,
             playOrder: [],
+            roundOrder: [],
             turn: 1,
             turnsLeft: 1,
             round: 1,
         };
 
+        // Add all users from room to match
         room.usersRooms.forEach((user) => {
             match.players.push({
                 bet: null,
@@ -371,6 +373,7 @@ export class MatchService {
 
     startTurn(match: Match): void {
         match.playOrder = this.getPlayerOrder(match.players);
+        match.roundOrder = match.playOrder;
     }
 
     getPlayerOrder(players: Player[], first: number | null = null): number[] {
@@ -498,7 +501,7 @@ export class MatchService {
     calculateTurnWinner(match: Match): Player {
         let trumpPartition = Math.floor(match.tableCard / 4);
 
-        trumpPartition = trumpPartition == 9 ? 1 : trumpPartition + 1;
+        trumpPartition = trumpPartition == 9 ? 0 : trumpPartition + 1;
 
         const plays: { playerId: number; card: number }[] = [];
 
@@ -528,6 +531,7 @@ export class MatchService {
 
         match.turnsLeft--;
 
+        // A new round will be started
         if (match.turnsLeft <= 0) {
             const losers: Player[] = this.calculateRoundLosers(match);
 
@@ -535,7 +539,10 @@ export class MatchService {
                 l.cardsOnNextRound--;
             });
 
-            match.playOrder = this.getPlayerOrder(match.players);
+            // Set new order of round
+            match.roundOrder.push(match.roundOrder[0]);
+            match.roundOrder.shift();
+            match.playOrder = match.roundOrder;
 
             if (match.playOrder.length < 2) {
                 return this.updateStatus(match, MatchStatus.FINISHED);
