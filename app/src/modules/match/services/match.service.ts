@@ -542,6 +542,15 @@ export class MatchService {
             // Set new order of round
             match.roundOrder.push(match.roundOrder[0]);
             match.roundOrder.shift();
+
+            match.players.forEach((player) => {
+                if (player.cardsOnNextRound <= 0) {
+                    const indexToRemove = match.roundOrder.findIndex(
+                        (id) => id == player.id,
+                    );
+                    match.roundOrder.splice(indexToRemove, 1);
+                }
+            });
             match.playOrder = match.roundOrder;
 
             if (match.playOrder.length < 2) {
