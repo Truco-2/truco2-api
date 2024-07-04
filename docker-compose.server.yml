@@ -1,0 +1,26 @@
+services:
+  # image project
+  app:
+    restart: unless-stopped
+    container_name: truco2-api-app-${APP_NAME}
+    build:
+      context: ./app
+      dockerfile: server.Dockerfile
+    networks:
+      - appnet
+
+  nginx:
+    restart: unless-stopped
+    container_name: truco2-api-nginx-${APP_NAME}
+    build:
+      context: ./nginx
+    ports:
+      - ${APP_PORT}:80
+    networks:
+      - appnet
+    depends_on:
+      - app
+
+networks:
+  appnet:
+    driver: bridge
