@@ -6,5 +6,7 @@ COPY ./ ./
 
 RUN npm ci
 RUN npm run build
+RUN npx prisma generate 
+RUN npx prisma migrate deploy
 
 CMD ["node", "dist/main"]
