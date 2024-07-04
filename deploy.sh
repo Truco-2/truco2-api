@@ -4,8 +4,6 @@ then
     rm app/.env
 fi
 
-
-
 cat <<EOF > app/.env
 DATABASE_URL="$3"
 JWT_SECRET="$4"

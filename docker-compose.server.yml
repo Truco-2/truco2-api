@@ -4,6 +4,7 @@ services:
     restart: unless-stopped
     container_name: truco2-api-app-${APP_NAME}
     build:
+      no_cache: true
       context: ./app
       dockerfile: server.Dockerfile
     networks:
