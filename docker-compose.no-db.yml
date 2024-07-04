@@ -1,0 +1,11 @@
+services:
+  # image project
+  app:
+    build:
+      context: ./app
+    restart: unless-stopped
+    container_name: truco2-api-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app:/app/
