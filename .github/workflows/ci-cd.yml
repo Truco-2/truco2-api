@@ -39,7 +39,7 @@ jobs:
           script: |
             cd /home/dev/truco2-api-devel/
             git pull origin devel
-            docker compose -f docker-compose.devel.yml up -d --build
+            sh deply.sh "devel" "${{ vars.API_DEVEL_PORT }}" "postgresql://postgres:${{ secrets.DB_PASSWORD }}@${{ secrets.SERVER_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_DEVEL }}?schema=public" "${{ secrets.API_JWT_SECRET }}"
   deploy-staging:
     if: github.ref_name == 'staging'
     needs: [unit-tests, e2e-tests]
@@ -55,7 +55,7 @@ jobs:
           script: |
             cd /home/dev/truco2-api-staging/
             git pull origin staging
-            docker compose -f docker-compose.staging.yml up -d --build
+            sh deply.sh "staging" "${{ vars.API_STAGING_PORT }}" "postgresql://postgres:${{ secrets.DB_PASSWORD }}@${{ secrets.SERVER_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_STAGING }}?schema=public" "${{ secrets.API_JWT_SECRET }}"
   deploy-production:
     if: github.ref_name == 'main'
     needs: [unit-tests, e2e-tests]
@@ -71,4 +71,4 @@ jobs:
           script: |
             cd /home/dev/truco2-api/
             git pull origin main
-            docker compose -f docker-compose.production.yml up -d --build
+            sh deply.sh "production" "${{ vars.API_PRODUCTION_PORT }}" "postgresql://postgres:${{ secrets.DB_PASSWORD }}@${{ secrets.SERVER_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_PRODUCTION }}?schema=public" "${{ secrets.API_JWT_SECRET }}"
