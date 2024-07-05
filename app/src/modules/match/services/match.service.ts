@@ -400,6 +400,21 @@ export class MatchService {
         return order;
     }
 
+    setRoundOrder(match: Match): void {
+        match.roundOrder.push(match.roundOrder[0]);
+        match.roundOrder.shift();
+
+        match.players.forEach((p) => {
+            if (p.cardsOnNextRound <= 0) {
+                const orderIndex = match.roundOrder.findIndex((o) => o == p.id);
+
+                if (orderIndex) {
+                    match.roundOrder.splice(orderIndex, 1);
+                }
+            }
+        });
+    }
+
     sortCards(match: Match): void {
         match.players.forEach((player) => {
             player.cards = [];
@@ -483,11 +498,8 @@ export class MatchService {
     getTurnsNumber(match: Match): number {
         const cardNumbers: number[] = match.players.map((p) => p.cards.length);
 
-        cardNumbers.filter((p) => p).sort();
-
-        const arrayLength = cardNumbers.length;
-
-        return arrayLength > 1 ? cardNumbers[arrayLength - 2] : 0;
+        cardNumbers.sort();
+        return cardNumbers[cardNumbers.length - 2];
     }
 
     getSumPlayerBets(match: Match): number {
@@ -543,17 +555,7 @@ export class MatchService {
                 l.cardsOnNextRound--;
             });
 
-            // Set new order of round
-            match.players.forEach((player) => {
-                if (player.cardsOnNextRound <= 0) {
-                    const indexToRemove = match.roundOrder.findIndex(
-                        (id) => id == player.id,
-                    );
-                    match.roundOrder.splice(indexToRemove, 1);
-                }
-            });
-            match.roundOrder.push(match.roundOrder[0]);
-            match.roundOrder.shift();
+            this.setRoundOrder(match);
             match.playOrder = match.roundOrder;
 
             if (match.playOrder.length < 2) {
