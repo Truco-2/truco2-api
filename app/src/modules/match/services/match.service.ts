@@ -468,7 +468,7 @@ export class MatchService {
                 (p) => p.id == match.playOrder[i],
             );
 
-            if (!player.play) {
+            if (!player.play && player.cards.length > 0) {
                 return player;
             }
         }
