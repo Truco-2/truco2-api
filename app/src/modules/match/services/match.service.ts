@@ -477,7 +477,15 @@ export class MatchService {
     }
 
     getBetOptions(match: Match, playerId: number): number[] {
-        const turnsNumber = this.getTurnsNumber(match);
+        let turnsNumber = this.getTurnsNumber(match);
+
+        const player = match.players.find((p) => p.id == playerId);
+
+        if (player) {
+            if (turnsNumber > player.cards.length) {
+                turnsNumber = player.cards.length;
+            }
+        }
 
         const options = [...Array(turnsNumber + 1).keys()];
 
