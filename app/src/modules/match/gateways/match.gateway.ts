@@ -25,6 +25,7 @@ import { GetUser } from 'src/common/decorators/get-user/get-user.decorator';
 export class MatchGateway implements OnGatewayDisconnect {
     @WebSocketServer() server: Server;
     msgKey = 'match-msg';
+    chatKey = 'match-chat';
     defaultCounter = 30;
 
     constructor(
@@ -55,6 +56,24 @@ export class MatchGateway implements OnGatewayDisconnect {
             clients: this.matchService.clients,
             matchs: this.matchService.matchs,
         });
+    }
+
+    @UseFilters(SocketIoExceptionFilter)
+    @UseGuards(JwtAuthGuard)
+    @SubscribeMessage('chat')
+    async handleChat(
+        @MessageBody() body: { message: string },
+        @ConnectedSocket() client: Socket,
+    ): Promise<void> {
+        const match = await this.matchService.getMatchFromClient(client.id);
+
+        if (match) {
+            const playerId = await this.matchService.getPlayerIdByClientId(
+                client.id,
+            );
+
+            this.sendChatMessage(match, playerId, body.message);
+        }
     }
 
     @UseFilters(SocketIoExceptionFilter)
@@ -395,6 +414,15 @@ export class MatchGateway implements OnGatewayDisconnect {
                     match: r.match,
                 },
             });
+        });
+    }
+
+    async sendChatMessage(match: Match, playerId: number, message: string) {
+        this.server.to('match_' + match.id).emit(this.chatKey, {
+            data: {
+                playerId: playerId,
+                message: message,
+            },
         });
     }
 }

@@ -715,4 +715,18 @@ export class MatchService {
 
         return null;
     }
+
+    getMatchFromClient(clientId: string): Match {
+        const client = this.clients.find((c) => c.clientId == clientId);
+
+        if (client) {
+            const match = this.matchs.find((m) => m.id == client.matchId);
+
+            if (match) {
+                return match;
+            }
+        }
+
+        return null;
+    }
 }
