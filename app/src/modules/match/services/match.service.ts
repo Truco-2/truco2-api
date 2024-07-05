@@ -408,7 +408,7 @@ export class MatchService {
             if (p.cardsOnNextRound <= 0) {
                 const orderIndex = match.roundOrder.findIndex((o) => o == p.id);
 
-                if (orderIndex) {
+                if (orderIndex > -1) {
                     match.roundOrder.splice(orderIndex, 1);
                 }
             }
