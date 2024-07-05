@@ -482,8 +482,12 @@ export class MatchService {
 
     getTurnsNumber(match: Match): number {
         const cardNumbers: number[] = match.players.map((p) => p.cards.length);
-        cardNumbers.sort();
-        return cardNumbers.find((cardNumber) => cardNumber != 0);
+
+        cardNumbers.filter((p) => p).sort();
+
+        const arrayLength = cardNumbers.length;
+
+        return arrayLength > 1 ? cardNumbers[arrayLength - 2] : 0;
     }
 
     getSumPlayerBets(match: Match): number {
