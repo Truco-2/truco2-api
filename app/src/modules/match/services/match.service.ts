@@ -478,6 +478,7 @@ export class MatchService {
 
     getBetOptions(match: Match, playerId: number): number[] {
         let turnsNumber = this.getTurnsNumber(match);
+        const turnsNumberOriginal = turnsNumber;
 
         const player = match.players.find((p) => p.id == playerId);
 
@@ -492,11 +493,14 @@ export class MatchService {
         if (match.playOrder[match.playOrder.length - 1] == playerId) {
             const sumPlayersBets = this.getSumPlayerBets(match);
 
-            if (sumPlayersBets <= turnsNumber) {
-                options.splice(
-                    options.findIndex((o) => o == turnsNumber - sumPlayersBets),
-                    1,
+            if (sumPlayersBets <= turnsNumberOriginal) {
+                const index = options.findIndex(
+                    (o) => o == turnsNumberOriginal - sumPlayersBets,
                 );
+
+                if (index > -1) {
+                    options.splice(index, 1);
+                }
             }
         }
 
