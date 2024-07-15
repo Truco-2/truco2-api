@@ -400,6 +400,21 @@ export class MatchService {
         return order;
     }
 
+    setRoundOrder(match: Match): void {
+        match.roundOrder.push(match.roundOrder[0]);
+        match.roundOrder.shift();
+
+        match.players.forEach((p) => {
+            if (p.cardsOnNextRound <= 0) {
+                const orderIndex = match.roundOrder.findIndex((o) => o == p.id);
+
+                if (orderIndex > -1) {
+                    match.roundOrder.splice(orderIndex, 1);
+                }
+            }
+        });
+    }
+
     sortCards(match: Match): void {
         match.players.forEach((player) => {
             player.cards = [];
@@ -453,7 +468,7 @@ export class MatchService {
                 (p) => p.id == match.playOrder[i],
             );
 
-            if (!player.play) {
+            if (!player.play && player.cards.length > 0) {
                 return player;
             }
         }
@@ -462,18 +477,30 @@ export class MatchService {
     }
 
     getBetOptions(match: Match, playerId: number): number[] {
-        const turnsNumber = this.getTurnsNumber(match);
+        let turnsNumber = this.getTurnsNumber(match);
+        const turnsNumberOriginal = turnsNumber;
+
+        const player = match.players.find((p) => p.id == playerId);
+
+        if (player) {
+            if (turnsNumber > player.cards.length) {
+                turnsNumber = player.cards.length;
+            }
+        }
 
         const options = [...Array(turnsNumber + 1).keys()];
 
         if (match.playOrder[match.playOrder.length - 1] == playerId) {
             const sumPlayersBets = this.getSumPlayerBets(match);
 
-            if (sumPlayersBets <= turnsNumber) {
-                options.splice(
-                    options.findIndex((o) => o == turnsNumber - sumPlayersBets),
-                    1,
+            if (sumPlayersBets <= turnsNumberOriginal) {
+                const index = options.findIndex(
+                    (o) => o == turnsNumberOriginal - sumPlayersBets,
                 );
+
+                if (index > -1) {
+                    options.splice(index, 1);
+                }
             }
         }
 
@@ -482,8 +509,9 @@ export class MatchService {
 
     getTurnsNumber(match: Match): number {
         const cardNumbers: number[] = match.players.map((p) => p.cards.length);
+
         cardNumbers.sort();
-        return cardNumbers.find((cardNumber) => cardNumber != 0);
+        return cardNumbers[cardNumbers.length - 2];
     }
 
     getSumPlayerBets(match: Match): number {
@@ -539,18 +567,7 @@ export class MatchService {
                 l.cardsOnNextRound--;
             });
 
-            // Set new order of round
-            match.roundOrder.push(match.roundOrder[0]);
-            match.roundOrder.shift();
-
-            match.players.forEach((player) => {
-                if (player.cardsOnNextRound <= 0) {
-                    const indexToRemove = match.roundOrder.findIndex(
-                        (id) => id == player.id,
-                    );
-                    match.roundOrder.splice(indexToRemove, 1);
-                }
-            });
+            this.setRoundOrder(match);
             match.playOrder = match.roundOrder;
 
             if (match.playOrder.length < 2) {
