@@ -322,6 +322,7 @@ export class MatchService {
             turn: 1,
             turnsLeft: 1,
             round: 1,
+            roomId: room.id,
         };
 
         // Add all users from room to match
@@ -680,6 +681,14 @@ export class MatchService {
         if (index > -1) {
             this.matchs.splice(index, 1);
         }
+
+        // Update room
+        this.prisma.room.update({
+            where: { id: match.roomId },
+            data: {
+                status: RoomStatus.WAITING,
+            },
+        });
     }
 
     getClientsByMatch(match: Match): string[] {

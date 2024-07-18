@@ -15,6 +15,7 @@ export interface Match {
     turn: number;
     turnsLeft: number;
     round: number;
+    roomId: number;
 }
 
 export interface MatchResouce {
