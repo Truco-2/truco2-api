@@ -22,6 +22,9 @@ export class RoomService {
                     },
                 },
             },
+            orderBy: {
+                id: 'desc',
+            },
         });
 
         return plainToInstance(RoomDto, rooms, {
