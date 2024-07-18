@@ -3,6 +3,9 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'src/providers/prisma/prisma.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { faker } from '@faker-js/faker';
+import { RoomStatus } from 'src/common/enums/room-status.enum';
+import { plainToInstance } from 'class-transformer';
+import { UserInformation } from '../dtos/user-information';
 
 @Injectable()
 export class UserService {
@@ -56,6 +59,26 @@ export class UserService {
                 email: data.email,
                 password: data.password,
             },
+        });
+    }
+
+    async RetrieveUserInformation(userId: number): Promise<UserInformation> {
+        const user = this.prisma.user.findFirst({
+            where: { id: userId },
+            include: {
+                usersRooms: {
+                    include: { room: true },
+                    where: {
+                        NOT: {
+                            room: { status: RoomStatus.FINISHED },
+                        },
+                    },
+                },
+            },
+        });
+
+        return plainToInstance(UserInformation, user, {
+            excludeExtraneousValues: true,
         });
     }
 }
