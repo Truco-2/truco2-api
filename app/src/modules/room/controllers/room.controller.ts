@@ -8,6 +8,9 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
+
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
@@ -81,5 +84,10 @@ export class RoomController {
         this.roomGateway.updateAvailableList(room);
 
         return true;
+    }
+
+    @Cron(CronExpression.EVERY_10_SECONDS)
+    async HandleRooms() {
+        await this.roomService.RemovePlayersFromInactiveRooms();
     }
 }
