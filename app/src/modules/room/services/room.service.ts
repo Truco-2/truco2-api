@@ -78,6 +78,40 @@ export class RoomService {
         });
     }
 
+    async RemovePlayersFromInactiveRooms() {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const rooms = await this.prisma.room.findMany({
+            where: {
+                id: 27,
+            },
+            include: { usersRooms: true },
+        });
+        console.log(fiveMinutesAgo);
+        console.log(rooms);
+
+        rooms.forEach(async (r) => {
+            await this.prisma.room.update({
+                where: {
+                    id: r.id,
+                },
+                data: {
+                    usersRooms: {
+                        deleteMany: { roomId: { gt: 0 } },
+                    },
+                },
+                include: { usersRooms: true },
+            });
+        });
+
+        // await this.prisma.room.deleteMany({
+        //     where: {
+        //         updatedAt: {
+        //             lt: fiveMinutesAgo,
+        //         },
+        //     },
+        // });
+    }
+
     async findByUser(userId: number): Promise<RoomDto | null> {
         const room = await this.prisma.room.findFirst({
             where: {
