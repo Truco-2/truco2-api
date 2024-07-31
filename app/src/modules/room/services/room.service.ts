@@ -82,7 +82,7 @@ export class RoomService {
     }
 
     async RemovePlayersFromInactiveRooms() {
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const fiveMinutesAgo = new Date(Date.now() - 60 * 60 * 1000);
         const rooms = await this.prisma.room.findMany({
             where: {
                 updatedAt: {

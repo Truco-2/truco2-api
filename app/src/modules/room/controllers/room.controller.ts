@@ -86,9 +86,8 @@ export class RoomController {
         return true;
     }
 
-    @Cron(CronExpression.EVERY_10_SECONDS)
+    @Cron(CronExpression.EVERY_10_MINUTES)
     async HandleRooms() {
         await this.roomService.RemovePlayersFromInactiveRooms();
-        return;
     }
 }
