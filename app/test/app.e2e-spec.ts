@@ -6,6 +6,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { UserService } from 'src/modules/user/services/user.service';
 
 describe('AppController (e2e)', () => {
+    jest.useFakeTimers();
     let app: INestApplication;
 
     const mockAuthService = {
