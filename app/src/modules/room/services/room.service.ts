@@ -22,6 +22,9 @@ export class RoomService {
                     },
                 },
             },
+            orderBy: {
+                id: 'desc',
+            },
         });
 
         return plainToInstance(RoomDto, rooms, {
@@ -82,12 +85,12 @@ export class RoomService {
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         const rooms = await this.prisma.room.findMany({
             where: {
-                id: 27,
+                updatedAt: {
+                    lt: fiveMinutesAgo,
+                },
             },
             include: { usersRooms: true },
         });
-        console.log(fiveMinutesAgo);
-        console.log(rooms);
 
         rooms.forEach(async (r) => {
             await this.prisma.room.update({
