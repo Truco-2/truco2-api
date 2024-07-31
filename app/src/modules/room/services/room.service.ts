@@ -106,13 +106,13 @@ export class RoomService {
             });
         });
 
-        // await this.prisma.room.deleteMany({
-        //     where: {
-        //         updatedAt: {
-        //             lt: fiveMinutesAgo,
-        //         },
-        //     },
-        // });
+        await this.prisma.room.deleteMany({
+            where: {
+                updatedAt: {
+                    lt: fiveMinutesAgo,
+                },
+            },
+        });
     }
 
     async findByUser(userId: number): Promise<RoomDto | null> {
